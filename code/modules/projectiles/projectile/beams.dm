@@ -223,8 +223,9 @@
 	name = "sniper beam"
 	icon_state = "xray"
 	fire_sound = 'sound/weapons/marauder.ogg'
-	damage = 35
+	damage = 60
 	armor_penetration = 10
+	distance_falloff = 0.5
 	damage_falloff_list = null
 
 	muzzle_type = /obj/projectile/laser/xray/muzzle
@@ -322,6 +323,14 @@
 	muzzle_type = /obj/projectile/trilaser/muzzle
 	tracer_type = /obj/projectile/trilaser/tracer
 	impact_type = /obj/projectile/trilaser/impact
+
+//Exosuits have heavier cutters with less falloff
+/obj/item/projectile/beam/plasmacutter/mech
+		damage_falloff_list = list(
+		list(5, 0.80),
+		list(7, 0.60),
+		list(9, 0.40),
+	)
 
 /obj/item/projectile/beam/plasmacutter/on_impact(atom/A)
 	if(istype(A, /turf/simulated/mineral))

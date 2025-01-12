@@ -30,7 +30,7 @@
 			return
 		if(chosen_obj.density)
 			for(var/atom/A in get_turf(src))
-				if(A != src && A.density && !(A.atom_flags & ATOM_FLAG_CHECKS_BORDER))
+				if(!istype(A, /obj/structure/cargopile) && A.density && !(A.atom_flags & ATOM_FLAG_CHECKS_BORDER))
 					to_chat(user, SPAN_WARNING("\The [A] blocks you from pulling out \the [chosen_obj]."))
 					return
 		if(!do_after(user, 0.5 SECONDS, src, DO_PUBLIC_UNIQUE)) return
@@ -712,11 +712,12 @@
 	use_external_power = TRUE
 	has_safety = FALSE
 	max_shots = 10
+	projectile_type = /obj/item/projectile/beam/plasmacutter/mech
 
 
 /obj/item/mech_equipment/mounted_system/taser/plasma
 	name = "mounted plasma cutter"
-	desc = "An industrial plasma cutter mounted onto the chassis of the mech. "
+	desc = "An industrial plasma cutter mounted onto the chassis of the mech. The additional size means increased coherency at longer range. "
 	icon_state = "mech_plasma"
 	holding_type = /obj/item/gun/energy/plasmacutter/mounted/mech
 	restricted_hardpoints = list(HARDPOINT_LEFT_HAND, HARDPOINT_RIGHT_HAND, HARDPOINT_LEFT_SHOULDER, HARDPOINT_RIGHT_SHOULDER)

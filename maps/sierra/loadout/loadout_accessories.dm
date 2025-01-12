@@ -78,6 +78,9 @@
 	path = /obj/item/clothing/accessory/badge/holo/investigator
 	allowed_roles = list(/datum/job/iaa)
 
+/datum/gear/accessory/stole
+	allowed_roles = list(/datum/job/chaplain)
+
 /datum/gear/accessory/solgov
 	display_name = "Solgov command insignia"
 	path = /obj/item/clothing/accessory/solgov/department/command
@@ -138,3 +141,33 @@
 	allowed_roles = list(/datum/job/cmo, /datum/job/senior_doctor, /datum/job/doctor, /datum/job/doctor_trainee, /datum/job/explorer_medic, /datum/job/psychiatrist, /datum/job/chemist)
 	flags = GEAR_HAS_NO_CUSTOMIZATION
 	cost = 0
+
+/datum/gear/accessory/cross_blue
+	display_name = "Cross blue"
+	path = /obj/item/clothing/accessory/cross_blue
+	flags = GEAR_HAS_NO_CUSTOMIZATION
+	cost = 2
+
+/datum/gear/accessory/cross_red
+	display_name = "Cross red"
+	path = /obj/item/clothing/accessory/cross_red
+	flags = GEAR_HAS_NO_CUSTOMIZATION
+	cost = 2
+
+/datum/gear/accessory/flower_gold
+	display_name = "Flower gold"
+	path = /obj/item/clothing/accessory/flower_gold
+	flags = GEAR_HAS_NO_CUSTOMIZATION
+	cost = 2
+
+/datum/gear/accessory/flower_silver
+	display_name = "Flower silver"
+	path = /obj/item/clothing/accessory/flower_silver
+	flags = GEAR_HAS_NO_CUSTOMIZATION
+	cost = 2
+
+/datum/gear/accessory/flower_bronze
+	display_name = "Flower bronze"
+	path = /obj/item/clothing/accessory/flower_bronze
+	flags = GEAR_HAS_NO_CUSTOMIZATION
+	cost = 2

@@ -163,8 +163,8 @@
 		to_chat(user, SPAN_WARNING("\The [src] isn't open!"))
 		return TRUE
 	// Eating with forks
-	if(istype(W,/obj/item/material/kitchen/utensil))
-		var/obj/item/material/kitchen/utensil/U = W
+	if(istype(W,/obj/item/material/utensil))
+		var/obj/item/material/utensil/U = W
 		if(U.scoop_food)
 			if(!U.reagents)
 				U.create_reagents(5)
@@ -1051,16 +1051,6 @@
 /obj/item/reagent_containers/food/snacks/cheesyfries/Initialize()
 	.=..()
 	reagents.add_reagent(/datum/reagent/nutriment/protein, 2)
-
-/obj/item/reagent_containers/food/snacks/fortunecookie
-	name = "fortune cookie"
-	desc = "A true prophecy in each cookie!"
-	icon_state = "fortune_cookie"
-	filling_color = "#e8e79e"
-	center_of_mass = "x=15;y=14"
-	nutriment_desc = list("fortune cookie" = 2)
-	nutriment_amt = 3
-	bitesize = 2
 
 /obj/item/reagent_containers/food/snacks/badrecipe
 	name = "burned mess"
@@ -3083,7 +3073,7 @@
 
 // Dough + rolling pin = flat dough
 /obj/item/reagent_containers/food/snacks/dough/use_tool(obj/item/W, mob/living/user, list/click_params)
-	if(istype(W,/obj/item/material/kitchen/rollingpin))
+	if(istype(W,/obj/item/material/rollingpin))
 		new /obj/item/reagent_containers/food/snacks/sliceable/flatdough(src)
 		to_chat(user, SPAN_NOTICE("You flatten the dough."))
 		qdel(src)

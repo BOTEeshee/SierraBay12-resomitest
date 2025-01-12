@@ -41,6 +41,7 @@
 	var/y_offset = 0
 	var/landloc
 	var/skilled_enough = FALSE
+	var/skill_req = SKILL_EXPERIENCED
 
 /obj/machinery/computer/shuttle_control/proc/update_operator_skill()
 	if (isobserver(usr))
@@ -48,7 +49,7 @@
 	if(!usr)
 		return
 	operator_skill = usr.get_skill_value(SKILL_PILOT)
-	if (operator_skill >= SKILL_EXPERIENCED && !(istype(usr, /mob/living/silicon/ai)))
+	if (operator_skill >= skill_req && !(istype(usr, /mob/living/silicon/ai)))
 		skilled_enough = TRUE
 	else
 		skilled_enough = FALSE
@@ -79,6 +80,9 @@
 
 /mob/living/carbon/human/update_dead_sight()
 	. = ..()
+	if(!eyeobj)
+		cancel_landeye_view()
+		return
 	if(eyeobj.type == /mob/observer/eye/landeye)
 		set_see_in_dark(8)
 		set_see_invisible(SEE_INVISIBLE_MINIMUM)
@@ -138,6 +142,7 @@
 /obj/machinery/computer/shuttle_control/explore/pod_hand_one
 /obj/machinery/computer/shuttle_control/explore/pod_hand_two
 /obj/machinery/computer/shuttle_control/explore/graysontug/hand_two
+/obj/machinery/computer/shuttle_control/explore/merc_shuttle/merc_drop_pod
 
 /area/mine
 	name = "Mine"
@@ -163,6 +168,7 @@
 	/obj/machinery/computer/shuttle_control/explore/pod_hand_two,
 	/obj/machinery/computer/shuttle_control/explore/graysontug/hand_two,
 	/obj/machinery/computer/shuttle_control/explore/merc_shuttle,
+	/obj/machinery/computer/shuttle_control/explore/merc_shuttle/merc_drop_pod,
 	)
 
 	//Списки куда разрешена посадка
@@ -172,6 +178,10 @@
 	/area/exoplanet,
 	/area/bluespaceriver,
 	)
+
+	var/list/shadow_images = list()
+	var/list/saved_landmarks= list()
+
 
 /obj/machinery/computer/shuttle_control/explore/proc/oko_enter()
 	oko = new /mob/observer/eye/landeye
@@ -213,7 +223,7 @@
 		landmarky_off = shuttle_landmark.y - origin.y
 
 /obj/machinery/computer/shuttle_control/explore/proc/check_zone()
-
+	shadow_images = list()
 	var/turf/eyeturf = get_turf(oko)
 	var/list/image_cache = oko.placement_images
 	var/landable = TRUE
@@ -224,7 +234,8 @@
 		var/area/A = get_area(T)
 		var/zone_good = FALSE
 		I.loc = T
-		if(!(T.density))
+		shadow_images += I
+		if(T && !(T.density))
 			for(var/type in accesible_areas)
 				if(A.type in typesof(type))
 					zone_good = TRUE
@@ -267,6 +278,8 @@
 	src.Destroy()
 	SetName(initial(name))
 
+/obj/shuttle_landmark
+	var/list/image_shadow
 
 /obj/shuttle_landmark/ship/advancedlandmark/Initialize(mapload, obj/shuttle_landmark/ship/master, _name)
 	landmark_tag = "_[shuttle_name] [rand(1,99999)]"
@@ -282,11 +295,20 @@
 			var/datum/shuttle/shuttle_datum = SSshuttle.shuttles[shuttle_name]
 			if(temp in shuttle_datum.shuttle_area)
 				for(var/obj/machinery/computer/shuttle_control/explore/c in temp)
+					for(var/obj/shuttle_landmark/ship/advancedlandmark/l in c.saved_landmarks)
+						var/area/landmarkarea = get_area(l)
+						if(landmarkarea in shuttle_datum.shuttle_area)
+							continue
+						else
+							c.saved_landmarks -= l
+							qdel(l)
 					if(c.check_zone())
 						var/turf/eyeturf = get_turf(c.oko)
 						var/turf/T = locate(eyeturf.x + c.landmarkx_off, eyeturf.y + c.landmarky_off , eyeturf.z)
 						landmark = new (T, src)
+						c.saved_landmarks += landmark
 						c.shuttle_type.set_destination(landmark)
+						c.shuttle_type.next_location.image_shadow = c.shadow_images
 
 /turf
 	var/prev_type
@@ -295,3 +317,12 @@
 	.=..()
 	var/old_prev_type = prev_type
 	prev_type = old_prev_type
+
+
+/datum/shuttle/autodock/process_launch()
+	.=..()
+	for(var/i in 1 to LAZYLEN(next_location.image_shadow))
+		var/image/I = next_location.image_shadow[i]
+		var/turf/T = locate(I.loc.x, I.loc.y, I.loc.z)
+		I = image('mods/utility_items/icons/alphacolors.dmi', T, "dither50")
+		T.AddOverlays(I)
