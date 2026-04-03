@@ -1,4 +1,4 @@
-
+/*
 //////////////////////////
 //   ORION TRAIL HERE   //
 //////////////////////////
@@ -25,7 +25,7 @@
 #define ORION_VIEW_MAIN			0
 #define ORION_VIEW_SUPPLIES		1
 #define ORION_VIEW_CREW			2
-
+*/
 
 /obj/machinery/computer/arcade/orion_trail
 	name = "orion trail"
@@ -68,7 +68,7 @@
 	var/distance = 0
 	var/port = 0
 	var/view = 0
-
+/*
 /obj/machinery/computer/arcade/orion_trail/proc/newgame(emag = 0)
 	SetName("orion trail[emag ? ": Realism Edition" : ""]")
 	supplies = list("1" = 1, "2" = 1, "3" = 1, "4" = 60, "5" = 20, "6" = 5000)
@@ -93,28 +93,28 @@
 	switch(view)
 		if(ORION_VIEW_MAIN)
 			if(event == ORION_TRAIL_START) //new game? New game.
-				dat = "<center><h1>Orion Trail[emagged ? ": Realism Edition" : ""]</h1><br>Learn how our ancestors got to Orion, and have fun in the process!</center><br><P ALIGN=Right><a href='?src=\ref[src];continue=1'>Start New Game</a></P>"
+				dat = "<center><h1>Orion Trail[emagged ? ": Realism Edition" : ""]</h1><br>Learn how our ancestors got to Orion, and have fun in the process!</center><br><P ALIGN=Right><a href='byond://?src=\ref[src];continue=1'>Start New Game</a></P>"
 				show_browser(user, dat, "window=arcade")
 				return
 			else
 				event_title = event
-				event_actions = "<a href='?src=\ref[src];continue=1'>Continue your journey</a><br>"
+				event_actions = "<a href='byond://?src=\ref[src];continue=1'>Continue your journey</a><br>"
 			switch(event)
 				if(ORION_TRAIL_GAMEOVER)
 					event_info = ""
-					event_actions = "<a href='?src=\ref[src];continue=1'>Start New Game</a><br>"
+					event_actions = "<a href='byond://?src=\ref[src];continue=1'>Start New Game</a><br>"
 				if(ORION_TRAIL_SPACEPORT)
 					event_title   += ": [stops[port]]"
 					event_desc     = "[stopblurbs[port]]"
 					event_info     = ""
 					if(port == 9)
-						event_actions = "<a href='?src=\ref[src];continue=1'>Return to the title screen!</a><br>"
+						event_actions = "<a href='byond://?src=\ref[src];continue=1'>Return to the title screen!</a><br>"
 					else
-						event_actions  = "<a href='?src=\ref[src];continue=1'>Shove off</a><br>"
-						event_actions += "<a href='?src=\ref[src];attack=1'>Raid Spaceport</a>"
+						event_actions  = "<a href='byond://?src=\ref[src];continue=1'>Shove off</a><br>"
+						event_actions += "<a href='byond://?src=\ref[src];attack=1'>Raid Spaceport</a>"
 				if(ORION_TRAIL_SPACEPORT_RAIDED)
 					event_title  += ": [stops[port]]"
-					event_actions = "<a href='?src=\ref[src];continue=1'>Shove off</a>"
+					event_actions = "<a href='byond://?src=\ref[src];continue=1'>Shove off</a>"
 				if(ORION_TRAIL_RAIDERS)
 					event_desc   = "You arm yourselves as you prepare to fight off the vox menace!"
 				if(ORION_TRAIL_DERELICT)
@@ -123,30 +123,30 @@
 					event_desc = "A disease has spread amoungst your crew!"
 				if(ORION_TRAIL_FLUX)
 					event_desc = "You've entered a turbulent region. Slowing down would be better for your ship but would cost more fuel."
-					event_actions  = "<a href='?src=\ref[src];continue=1;risky=25'>Continue as normal</a><BR>"
-					event_actions += "<a href='?src=\ref[src];continue=1;slow=1;'>Take it slow</a><BR>"
+					event_actions  = "<a href='byond://?src=\ref[src];continue=1;risky=25'>Continue as normal</a><BR>"
+					event_actions += "<a href='byond://?src=\ref[src];continue=1;slow=1;'>Take it slow</a><BR>"
 				if(ORION_TRAIL_MALFUNCTION)
 					event_info = ""
 					event_desc = "The ship's computers are malfunctioning! You can choose to fix it with a part or risk something going awry."
-					event_actions  = "<a href='?src=\ref[src];continue=1;risky=25'>Continue as normal</a><BR>"
+					event_actions  = "<a href='byond://?src=\ref[src];continue=1;risky=25'>Continue as normal</a><BR>"
 					if(supplies["3"] != 0)
-						event_actions += "<a href='?src=\ref[src];continue=1;fix=3'>Fix using a part.</a><BR>"
+						event_actions += "<a href='byond://?src=\ref[src];continue=1;fix=3'>Fix using a part.</a><BR>"
 				if(ORION_TRAIL_COLLISION)
 					event_info = ""
 					event_desc = "Something has hit your ship and breached the hull! You can choose to fix it with a part or risk something going awry."
-					event_actions  = "<a href='?src=\ref[src];continue=1;risky=25'>Continue as normal</a><BR>"
+					event_actions  = "<a href='byond://?src=\ref[src];continue=1;risky=25'>Continue as normal</a><BR>"
 					if(supplies["2"] != 0)
-						event_actions += "<a href='?src=\ref[src];continue=1;fix=2'>Fix using a part.</a><BR>"
+						event_actions += "<a href='byond://?src=\ref[src];continue=1;fix=2'>Fix using a part.</a><BR>"
 				if(ORION_TRAIL_BREAKDOWN)
 					event_info = ""
 					event_desc = "The ship's engines broke down! You can choose to fix it with a part or risk something going awry."
-					event_actions  = "<a href='?src=\ref[src];continue=1;risky=25'>Continue as normal</a><BR>"
+					event_actions  = "<a href='byond://?src=\ref[src];continue=1;risky=25'>Continue as normal</a><BR>"
 					if(supplies["1"] != 0)
-						event_actions += "<a href='?src=\ref[src];continue=1;fix=1'>Fix using a part.</a><BR>"
+						event_actions += "<a href='byond://?src=\ref[src];continue=1;fix=1'>Fix using a part.</a><BR>"
 				if(ORION_TRAIL_STUCK)
 					event_desc    = "You've ran out of fuel. Your only hope to survive is to get refueled by a passing ship, if there are any."
 					if(supplies["5"] == 0)
-						event_actions = "<a href='?src=\ref[src];continue=1;food=1'>Wait</a>"
+						event_actions = "<a href='byond://?src=\ref[src];continue=1;food=1'>Wait</a>"
 				if(ORION_TRAIL_CARP)
 					event_desc = "You've chanced upon a large carp migration! Known both for their delicious meat as well as their bite, you and your crew arm yourselves for a small hunting trip."
 				if(ORION_TRAIL_MUTINY)
@@ -160,18 +160,18 @@
 			dat += "<center>You have [supplies["6"]] [GLOB.using_map.local_currency_name].</center>"
 			for(var/i=1; i<6; i++)
 				var/amm = (i>3?10:1)
-				dat += "[supplies["[i]"]] [supply_name["[i]"]][event==ORION_TRAIL_SPACEPORT ? ", <a href='?src=\ref[src];buy=[i]'>buy [amm] for [supply_cost["[i]"]]T</a>" : ""]<BR>"
+				dat += "[supplies["[i]"]] [supply_name["[i]"]][event==ORION_TRAIL_SPACEPORT ? ", <a href='byond://?src=\ref[src];buy=[i]'>buy [amm] for [supply_cost["[i]"]]T</a>" : ""]<BR>"
 				if(supplies["[i]"] >= amm && event == ORION_TRAIL_SPACEPORT)
-					dat += "<a href='?src=\ref[src];sell=[i]'>sell [amm] for [supply_cost["[i]"]]T</a><br>"
+					dat += "<a href='byond://?src=\ref[src];sell=[i]'>sell [amm] for [supply_cost["[i]"]]T</a><br>"
 		if(ORION_VIEW_CREW)
 			dat = "<center><h1>Crew</h1>View the status of your crew.</center>"
 			for(var/i=1;i<=length(settlers);i++)
-				dat += "[settlers[i]] <a href='?src=\ref[src];kill=[i]'>Kill</a><br>"
+				dat += "[settlers[i]] <a href='byond://?src=\ref[src];kill=[i]'>Kill</a><br>"
 
 	dat += "<br><P ALIGN=Right>View:<BR>"
-	dat += "[view==ORION_VIEW_MAIN ? "" : "<a href='?src=\ref[src];continue=1'>"]Main[view==ORION_VIEW_MAIN ? "" : "</a>"]<BR>"
-	dat += "[view==ORION_VIEW_SUPPLIES ? "" : "<a href='?src=\ref[src];supplies=1'>"]Supplies[view==ORION_VIEW_SUPPLIES ? "" : "</a>"]<BR>"
-	dat += "[view==ORION_VIEW_CREW ? "" : "<a href='?src=\ref[src];crew=1'>"]Crew[view==ORION_VIEW_CREW ? "" : "</a>"]</P>"
+	dat += "[view==ORION_VIEW_MAIN ? "" : "<a href='byond://?src=\ref[src];continue=1'>"]Main[view==ORION_VIEW_MAIN ? "" : "</a>"]<BR>"
+	dat += "[view==ORION_VIEW_SUPPLIES ? "" : "<a href='byond://?src=\ref[src];supplies=1'>"]Supplies[view==ORION_VIEW_SUPPLIES ? "" : "</a>"]<BR>"
+	dat += "[view==ORION_VIEW_CREW ? "" : "<a href='byond://?src=\ref[src];crew=1'>"]Crew[view==ORION_VIEW_CREW ? "" : "</a>"]</P>"
 	show_browser(user, dat, "window=arcade")
 
 /obj/machinery/computer/arcade/orion_trail/OnTopic(user, href_list)
@@ -470,7 +470,7 @@
 		prizevend()
 	event = null
 	src.updateUsrDialog()
-
+*/
 /obj/item/orion_ship
 	name = "model settler ship"
 	desc = "A model spaceship, it looks like those used back in the day when travelling to Orion! It even has a miniature FX-293 reactor, which was renowned for its instability and tendency to explode..."
@@ -503,7 +503,7 @@
 	src.visible_message(SPAN_DANGER("[src] explodes!"))
 	explosion(src.loc, 7)
 	qdel(src)
-
+/*
 #undef ORION_TRAIL_RAIDERS
 #undef ORION_TRAIL_FLUX
 #undef ORION_TRAIL_ILLNESS
@@ -523,3 +523,4 @@
 #undef ORION_VIEW_MAIN
 #undef ORION_VIEW_SUPPLIES
 #undef ORION_VIEW_CREW
+*/

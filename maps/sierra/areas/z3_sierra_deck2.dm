@@ -64,12 +64,12 @@
 
 /area/maintenance/substation/seconddeck
 	name = "Second Deck - Substation"
-
+/*
 /area/crew_quarters/laundry
 	name = "Second Deck - Laundry Room"
 	icon_state = "Sleep"
 	holomap_color = HOLOMAP_AREACOLOR_CREW
-
+*/
 /area/maintenance/abandoned_hydroponics
 	name = "Second Deck - Abandoned - Hydroponics"
 	icon_state = "hydro"
@@ -78,6 +78,11 @@
 /* RND AREAS
  * =========
  */
+
+/area/rnd/misc_lab
+	name = "First Deck - RND - Miscellaneous Lab"
+	icon_state = "misclab"
+	req_access = list(access_research)
 
 /area/rnd/xenobiology/entry
 	name = "Xenobiology Access"
@@ -104,25 +109,22 @@
 	icon_state = "xeno_lab"
 	holomap_color = HOLOMAP_AREACOLOR_SCIENCE
 
-/area/assembly/chargebay
-	name = "Second Deck - RND - Mech Bay"
-	icon_state = "mechbay"
-	holomap_color = HOLOMAP_AREACOLOR_SCIENCE
-
-/area/assembly/robotics
-	name = "Second Deck - RND - Robotics Lab"
-	icon_state = "robotics"
-	holomap_color = HOLOMAP_AREACOLOR_SCIENCE
+/area/rnd/blanks
+	name = "Second Deck - RND - Aux Backup Storage"
+	req_access = list(access_rd)
+	icon_state = "decontamination"
 
 /area/rnd/toxins
-	name = "Second Deck - RND - Toxins Lab"
+	name = "Second Deck - RND - Canister Storage"
 	icon_state = "toxstorage"
 	req_access = list(access_tox_storage)
 	holomap_color = HOLOMAP_AREACOLOR_SCIENCE
 
+/*
 /area/rnd/toxins/storage
 	name = "Second Deck - RND - Canister Storage"
 	holomap_color = HOLOMAP_AREACOLOR_SCIENCE
+*/
 
 /* VACANT AREAS
  * ============
@@ -131,7 +133,7 @@
 	name = "Second Deck - Gambling Room"
 	icon_state = "restrooms"
 	sound_env = MEDIUM_SOFTFLOOR
-
+/*
 /area/vacant/dungeon
 	name = "Second Deck - Dungeon"
 	icon_state = "restrooms"
@@ -141,7 +143,7 @@
 	name = "Second Deck - Unused Sauna"
 	icon_state = "restrooms"
 	sound_env = MEDIUM_SOFTFLOOR
-
+*/
 /area/maintenance/seconddeck/hangar
 	name = "Second Deck - Auxiliary Hangar"
 	icon_state = "hangar"
@@ -208,9 +210,16 @@
 	area_flags = AREA_FLAG_RAD_SHIELDED | AREA_FLAG_ION_SHIELDED
 	holomap_color = HOLOMAP_AREACOLOR_CREW
 
+/*
 /area/crew_quarters/garden_room
 	name = "Second deck - living - Lounge"
 	icon_state = "game_room_inf"
+	holomap_color = HOLOMAP_AREACOLOR_CREW
+*/
+
+/area/crew_quarters/dungeon_master_lounge
+	name = "Second Deck - Living Room"
+	sound_env = MEDIUM_SOFTFLOOR
 	holomap_color = HOLOMAP_AREACOLOR_CREW
 
 /area/crew_quarters/gym
@@ -255,7 +264,7 @@
 	holomap_color = HOLOMAP_AREACOLOR_CREW
 
 /area/crew_quarters/adherent
-	name = "Second Deck - Living - Adherent Maintenence"
+	name = "First Deck - Living - Adherent Maintenence"
 	icon_state = "robotics"
 	holomap_color = HOLOMAP_AREACOLOR_CREW
 
@@ -294,10 +303,12 @@
 	icon_state = "patients"
 	area_flags = AREA_FLAG_RAD_SHIELDED | AREA_FLAG_ION_SHIELDED
 
+/*
 /area/medical/wardhallway
 	name = "Second Deck - Patient Ward - Hallway"
 	icon_state = "medbay2"
 	area_flags = AREA_FLAG_RAD_SHIELDED | AREA_FLAG_ION_SHIELDED
+*/
 
 /area/medical/maintenance_equipstorage
 	name = "Second Deck - Infirmary - Lower Storage"
@@ -313,6 +324,18 @@
 		'sound/music/main.ogg'
 	)
 	req_access = list(access_morgue)
+
+/area/medical/mentalhealth
+	name = "Second Deck - Infirmary - Mental Health"
+	icon_state = "medbay3"
+	ambience = list('sound/ambience/signal.ogg')
+	req_access = list(access_psychiatrist)
+
+/area/medical/mentalhealth/therapyroom
+	name = "Second Deck - Infirmary - Therapy Room"
+	icon_state = "medbay3"
+	ambience = list('sound/ambience/signal.ogg')
+	req_access = list(access_psychiatrist)
 
 // Virology
 

@@ -8,33 +8,33 @@ on:
     branches: [ "dev-sierra" ]
   workflow_dispatch: # allows this workflow to be manually triggered
 env:
-  BYOND_MAJOR: "515"
-  BYOND_MINOR: "1636"
-  SPACEMAN_DMM_VERSION: suite-1.7.3
+  BYOND_MAJOR: "516"
+  BYOND_MINOR: "1667"
+  SPACEMAN_DMM_VERSION: suite-1.11
   RUST_G_REPO: "ss220-space/rust-g-tg"
   RUST_G_VERSION: "3.0.0-ss220"
 
 jobs:
   PreFlight:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - name: paths-filter
-        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d
         id: filter
         with:
           filters: .github/workflow-config/preflight-filters.yml
     outputs:
       dm: ${{ steps.filter.outputs.dm }}
   DreamChecker:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: PreFlight
     if: needs.PreFlight.outputs.dm == 'true'
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - name: Setup Cache
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: ~/spaceman_dmm/${{ env.SPACEMAN_DMM_VERSION }}
           key: ${{ runner.os }}-spacemandmm-${{ env.SPACEMAN_DMM_VERSION }}
@@ -54,15 +54,15 @@ jobs:
       #     chmod +x send.sh
       #     ./send.sh failure $WEBHOOK_URL
   Code:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
     - PreFlight
     - DreamChecker
     if: needs.PreFlight.outputs.dm == 'true'
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - name: Setup Cache
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: ~/BYOND-${{ env.BYOND_MAJOR }}.${{ env.BYOND_MINOR }}
           key: ${{ runner.os }}-byond-${{ env.BYOND_MAJOR }}-${{ env.BYOND_MINOR }}
@@ -84,22 +84,22 @@ jobs:
       #     chmod +x send.sh
       #     ./send.sh failure $WEBHOOK_URL
   ExampleMap:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
     - PreFlight
     - DreamChecker
     if: needs.PreFlight.outputs.dm == 'true'
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - name: Setup Cache
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: ~/BYOND-${{ env.BYOND_MAJOR }}.${{ env.BYOND_MINOR }}
           key: ${{ runner.os }}-byond-${{ env.BYOND_MAJOR }}-${{ env.BYOND_MINOR }}
       - name: Install rust_g dependencies
         run: ./scripts/install-rust_g-dependencies.sh
       - name: Setup rust_g cache
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: ~/.byond/bin/librust_g.so
           key: "rust_g-${{ env.RUST_G_REPO }}-${{ env.RUST_G_VERSION }}"
@@ -122,22 +122,22 @@ jobs:
       #     chmod +x send.sh
       #     ./send.sh failure $WEBHOOK_URL
   SierraMap:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
     - PreFlight
     - DreamChecker
     if: needs.PreFlight.outputs.dm == 'true'
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - name: Setup Cache
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: ~/BYOND-${{ env.BYOND_MAJOR }}.${{ env.BYOND_MINOR }}
           key: ${{ runner.os }}-byond-${{ env.BYOND_MAJOR }}-${{ env.BYOND_MINOR }}
       - name: Install rust_g dependencies
         run: ./scripts/install-rust_g-dependencies.sh
       - name: Setup rust_g cache
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: ~/.byond/bin/librust_g.so
           key: "rust_g-${{ env.RUST_G_REPO }}-${{ env.RUST_G_VERSION }}"
@@ -160,22 +160,22 @@ jobs:
       #     chmod +x send.sh
       #     ./send.sh failure $WEBHOOK_URL
   AwaySites:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
     - PreFlight
     - DreamChecker
     if: needs.PreFlight.outputs.dm == 'true'
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - name: Setup Cache
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: ~/BYOND-${{ env.BYOND_MAJOR }}.${{ env.BYOND_MINOR }}
           key: ${{ runner.os }}-byond-${{ env.BYOND_MAJOR }}-${{ env.BYOND_MINOR }}
       - name: Install rust_g dependencies
         run: ./scripts/install-rust_g-dependencies.sh
       - name: Setup rust_g cache
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: ~/.byond/bin/librust_g.so
           key: "rust_g-${{ env.RUST_G_REPO }}-${{ env.RUST_G_VERSION }}"

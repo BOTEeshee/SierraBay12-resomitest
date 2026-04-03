@@ -56,14 +56,18 @@
 		if(owner_name != last_owner_name && current)
 			output += "<B>[current.real_name]'s Memories</B><HR>"
 			last_owner_name = owner_name
-		output += "[M.memory] <a href='?src=\ref[src];remove_memory=\ref[M]'>\[Remove\]</a>"
+		output += "[M.memory] <a href='byond://?src=\ref[src];remove_memory=\ref[M]'>\[Remove\]</a>"
 
 	if(length(objectives) > 0)
 		output += "<HR><B>Objectives:</B>"
 
 		var/obj_count = 1
 		for(var/datum/objective/objective in objectives)
-			output += "<B>Objective #[obj_count]</B>: [objective.explanation_text]"
+			// [SIERRA-EDIT] - ANTAGONISTS - display text по умолчанию выводит тот же explanation text,
+			// но может быть динамично изменен для кнопок в нотесах
+			// output += "<B>Objective #[obj_count]</B>: [objective.explanation_text]" // SIERRA-EDIT - ORIGINAL
+			output += "<B>Objective #[obj_count]</B>: [objective.get_display_text()]"
+			// [SIERRA-EDIT]
 			obj_count++
 
 	if(SSgoals.ambitions[src])

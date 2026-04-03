@@ -38,7 +38,8 @@
 		/area/voxship/engineering,
 		/area/voxship/thrusters,
 		/area/voxship/fore,
-		/area/voxship/scavship
+		/area/voxship/scavship,
+		/area/voxship/entrance
 	)
 	dock_target = "vox_ship"
 	current_location = "nav_hangar_voxship"
@@ -63,7 +64,6 @@
 	desc = "Sensor array detects a medium-sized vessel of irregular shape. Unknown origin."
 	color = "#233012"
 	icon_state = "ship"
-	moving_state = "ship_moving"
 	fore_dir = WEST
 	vessel_size = SHIP_SIZE_SMALL
 
@@ -147,6 +147,11 @@
 	.=..()
 	TLV[GAS_OXYGEN] =	list(-1, -1, 0.1, 0.1) // Partial pressure, kpa
 	TLV[GAS_NITROGEN] = list(16, 19, 135, 140) // Partial pressure, kpa
+
+/obj/machinery/atmospherics/unary/vent_scrubber/on/vox/reset_scrubbing()
+	. = ..()
+	remove_from_scrubbing(GAS_NITROGEN)
+	add_to_scrubbing(GAS_OXYGEN)
 
 /obj/machinery/power/smes/buildable/preset/voxship/ship
 	uncreated_component_parts = list(

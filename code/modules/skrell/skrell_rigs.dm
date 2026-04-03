@@ -20,6 +20,7 @@
 	name = "skrellian recon hardsuit helmet"
 	desc = "A powerful recon hardsuit with integrated power supply and atmosphere. It's impressive design perfectly tailors to the user's body."
 	light_overlay = "helmet_light_dual"
+	head_light_range = 5
 	species_restricted = list(SPECIES_SKRELL)
 	sprite_sheets = list(
 		SPECIES_SKRELL = 'icons/mob/species/skrell/onmob_head_rig_skrell.dmi'
@@ -165,7 +166,7 @@
 	interface_name = "skrellian medical injector"
 	interface_desc = "A sleek medical injector of skrellian design."
 	charges = list(
-		list("tramadol",            "tramadol",            /datum/reagent/tramadol,      20),
+		list("tramadol",            "tramadol",            /datum/reagent/opiate/tramadol,      20),
 		list("dexalinp",            "dexalinp",            /datum/reagent/dexalinp,      20),
 		list("inaprovaline",        "inaprovaline",        /datum/reagent/inaprovaline,  20)
 	)
@@ -178,12 +179,12 @@
 	interface_name = "skrellian combat injector"
 	interface_desc = "A sleek combat injector of skrellian design."
 	charges = list(
-		list("tramadol",            "tramadol",            /datum/reagent/tramadol,      20),
+		list("tramadol",            "tramadol",            /datum/reagent/opiate/tramadol,      20),
 		list("dexalinp",            "dexalinp",            /datum/reagent/dexalinp,      20),
 		list("inaprovaline",        "inaprovaline",        /datum/reagent/inaprovaline,  20),
 		list("synaptizine",         "synaptizine",         /datum/reagent/synaptizine,        20),
 		list("hyperzine",           "hyperzine",           /datum/reagent/hyperzine,          20),
-		list("oxycodone",           "oxycodone",           /datum/reagent/tramadol/oxycodone, 20),
+		list("oxycodone",           "oxycodone",           /datum/reagent/opiate/oxycodone, 20),
 		list("glucose",             "glucose",             /datum/reagent/nutriment/glucose,  20)
 	)
 

@@ -20,6 +20,10 @@ var/global/datum/controller/master/Master = new
 	var/processing = TRUE
 	// How many times have we ran
 	var/iteration = 0
+	// [SIERRA-ADD] - MC
+	/// Stack end detector to detect stack overflows that kill the mc's main loop
+	var/datum/stack_end_detector/stack_end_detector
+	// [/SIERRA-ADD]
 
 	// world.time of last fire, for tracking lag outside of the mc
 	var/last_run
@@ -54,18 +58,19 @@ var/global/datum/controller/master/Master = new
 	var/static/restart_timeout = 0
 	var/static/restart_count = 0
 
-	var/const/tick_limit_default = 80
-	var/const/tick_limit_init = 98
-	var/const/tick_limit_to_run = 78
-	var/const/tick_limit_mc = 70
+	// [SIERRA-EDIT] - MC
+	var/const/tick_limit_default = 80 //[SIERRA-DEPREC] use TICK_LIMIT_RUNNING
+	var/const/tick_limit_init = 98   //[SIERRA-DEPREC] use TICK_LIMIT_INIT
+	var/const/tick_limit_to_run = 78 //[SIERRA-DEPREC] use TICK_LIMIT_TO_RUN
+	var/const/tick_limit_mc = 70     //[SIERRA-DEPREC] use TICK_LIMIT_MC
+	// [/SIERRA-EDIT]
 
 	//current tick limit, assigned before running a subsystem.
 	//used by CHECK_TICK as well so that the procs subsystems call can obey that SS's tick limits
-	var/static/current_ticklimit = tick_limit_default
+	var/static/current_ticklimit = TICK_LIMIT_RUNNING // [SIERRA-EDIT] - MC
 
 
 /datum/controller/master/New()
-	Uptime() //Uptime as close to boot as possible to set its statics
 	// [SIERRA-REMOVE] - RUST_G
 	/*
 	if (!global.diary)
@@ -102,10 +107,10 @@ var/global/datum/controller/master/Master = new
 	reverseRange(subsystems)
 	for(var/datum/controller/subsystem/ss in subsystems)
 		if (ss.flags & SS_NEEDS_SHUTDOWN)
-			var/time = Uptime()
+			var/time = uptime()
 			report_progress("Shutting down [ss] subsystem...")
 			ss.Shutdown()
-			report_progress("[ss] shutdown in [(Uptime() - time)/10]s.")
+			report_progress("[ss] shutdown in [(uptime() - time)/10]s.")
 	report_progress("Shutdown complete.")
 
 // Returns 1 if we created a new mc, 0 if we couldn't due to a recent restart,
@@ -175,7 +180,7 @@ var/global/datum/controller/master/Master = new
 // 	Make a subsystem, give it the SS_NO_FIRE flag, and do your work in it's Initialize()
 /datum/controller/master/Initialize(delay, init_sss)
 	set waitfor = FALSE
-	var/start_uptime = Uptime()
+	var/start_uptime = uptime()
 
 	if(delay)
 		sleep(delay)
@@ -190,14 +195,14 @@ var/global/datum/controller/master/Master = new
 	// Sort subsystems by init_order, so they initialize in the correct order.
 	sortTim(subsystems, GLOBAL_PROC_REF(cmp_subsystem_init))
 
-	current_ticklimit = tick_limit_init
+	current_ticklimit = TICK_LIMIT_INIT // [SIERRA-EDIT] - MC
 	for (var/datum/controller/subsystem/SS in subsystems)
 		if (SS.flags & SS_NO_INIT)
 			continue
-		SS.DoInitialize(Uptime())
+		SS.DoInitialize(uptime())
 		CHECK_TICK
-	current_ticklimit = tick_limit_default
-	var/msg = "Initializations complete within [(Uptime() - start_uptime) / 10] second\s!"
+	current_ticklimit = TICK_LIMIT_RUNNING // [SIERRA-EDIT] - MC
+	var/msg = "Initializations complete within [(uptime() - start_uptime) / 10] second\s!"
 	report_progress(msg)
 	log_world(msg)
 
@@ -276,8 +281,8 @@ var/global/datum/controller/master/Master = new
 
 		var/ss_runlevels = SS.runlevels
 		var/added_to_any = FALSE
-		for(var/I in 1 to length(GLOB.bitflags))
-			if(ss_runlevels & GLOB.bitflags[I])
+		for(var/I in 1 to length(GLOB.index_to_flag))
+			if(ss_runlevels & GLOB.index_to_flag[I])
 				while(length(runlevel_sorted_subsystems) < I)
 					runlevel_sorted_subsystems += list(list())
 				runlevel_sorted_subsystems[I] += SS
@@ -297,29 +302,36 @@ var/global/datum/controller/master/Master = new
 	var/cached_runlevel = current_runlevel
 	var/list/current_runlevel_subsystems = runlevel_sorted_subsystems[cached_runlevel]
 
-	init_timeofday = Uptime()
+	init_timeofday = uptime()
 	init_time = world.time
 
 	iteration = 1
 	var/error_level = 0
 	var/sleep_delta = 1
 	var/list/subsystems_to_check
+
+	// [SIERRA-ADD] - MC
+	//setup the stack overflow detector
+	stack_end_detector = new()
+	var/datum/stack_canary/canary = stack_end_detector.prime_canary()
+	canary.use_variable()
+	// [/SIERRA-ADD]
 	//the actual loop.
 
 	while (1)
-		tickdrift = max(0, MC_AVERAGE_FAST(tickdrift, (((Uptime() - init_timeofday) - (world.time - init_time)) / world.tick_lag)))
-		var/starting_tick_usage = world.tick_usage
+		tickdrift = max(0, MC_AVERAGE_FAST(tickdrift, (((uptime() - init_timeofday) - (world.time - init_time)) / world.tick_lag)))
+		var/starting_tick_usage = TICK_USAGE // [SIERRA-EDIT] - MC
 		if (processing <= 0)
-			current_ticklimit = tick_limit_default
+			current_ticklimit = TICK_LIMIT_RUNNING // [SIERRA-EDIT] - MC
 			sleep(10)
 			continue
 
 		//Anti-tick-contention heuristics:
 		//if there are mutiple sleeping procs running before us hogging the cpu, we have to run later.
 		//	(because sleeps are processed in the order received, longer sleeps are more likely to run first)
-		if (starting_tick_usage > tick_limit_mc) //if there isn't enough time to bother doing anything this tick, sleep a bit.
+		if (starting_tick_usage > TICK_LIMIT_MC) // [SIERRA-EDIT] - MC //if there isn't enough time to bother doing anything this tick, sleep a bit.
 			sleep_delta *= 2
-			current_ticklimit = tick_limit_default * 0.5
+			current_ticklimit = TICK_LIMIT_RUNNING * 0.5 // [SIERRA-EDIT] - MC
 			sleep(world.tick_lag * (processing * sleep_delta))
 			continue
 
@@ -329,7 +341,7 @@ var/global/datum/controller/master/Master = new
 
 		sleep_delta = MC_AVERAGE_FAST(sleep_delta, 1) //decay sleep_delta
 
-		if (starting_tick_usage > tick_limit_mc * 0.75) //we ran 3/4 of the way into the tick
+		if (starting_tick_usage > TICK_LIMIT_MC * 0.75) // [SIERRA-EDIT] - MC //we ran 3/4 of the way into the tick
 			sleep_delta += 1
 
 		//debug
@@ -359,29 +371,44 @@ var/global/datum/controller/master/Master = new
 		else
 			subsystems_to_check = tickersubsystems
 
-		if (CheckQueue(subsystems_to_check) <= 0)
+		// [SIERRA-EDIT] - MC
+		if (CheckQueue(subsystems_to_check) <= 0) //error processing queue
+			stack_trace("MC: CheckQueue failed. Current error_level is [round(error_level, 0.25)]")
 			if (!SoftReset(tickersubsystems, runlevel_sorted_subsystems))
-				log_world("MC: SoftReset() failed, crashing")
-				return
-			if (!error_level)
+				error_level++
+				CRASH("MC: SoftReset() failed, exiting loop()")
+
+			if (error_level < 2) //except for the first strike, stop incrmenting our iteration so failsafe enters defcon
 				iteration++
+			else
+				cached_runlevel = null //3 strikes, Lets reset the runlevel lists
+			current_ticklimit = TICK_LIMIT_RUNNING
+			sleep((1 SECONDS) * error_level)
 			error_level++
-			current_ticklimit = tick_limit_default
-			sleep(10)
 			continue
+		// [/SIERRA-EDIT]
 
 		if (queue_head)
-			if (RunQueue() <= 0)
-				if (!SoftReset(tickersubsystems, runlevel_sorted_subsystems))
-					log_world("MC: SoftReset() failed, crashing")
-					return
-				if (!error_level)
+			// [SIERRA-EDIT] - MC
+			if (RunQueue() <= 0) //error running queue
+				stack_trace("MC: RunQueue failed. Current error_level is [round(error_level, 0.25)]")
+				if (error_level > 1) //skip the first error,
+					if (!SoftReset(tickersubsystems, runlevel_sorted_subsystems))
+						error_level++
+						CRASH("MC: SoftReset() failed, exiting loop()")
+
+				if (error_level <= 2) //after 3 strikes stop incrmenting our iteration so failsafe enters defcon
 					iteration++
+				else
+					cached_runlevel = null //3 strikes, Lets also reset the runlevel lists
+				current_ticklimit = TICK_LIMIT_RUNNING
+				sleep((1 SECONDS) * error_level)
 				error_level++
-				current_ticklimit = tick_limit_default
-				sleep(10)
 				continue
-		error_level--
+			// [/SIERRA-EDIT]
+		error_level++ // [SIERRA-EDIT] - MC
+		if (error_level > 0)
+			error_level = max(MC_AVERAGE_SLOW(error_level-1, error_level), 0) // [SIERRA-EDIT] - MC
 		if (!queue_head) //reset the counts if the queue is empty, in the off chance they get out of sync
 			queue_priority_count = 0
 			queue_priority_count_bg = 0
@@ -389,9 +416,9 @@ var/global/datum/controller/master/Master = new
 		iteration++
 		last_run = world.time
 		src.sleep_delta = MC_AVERAGE_FAST(src.sleep_delta, sleep_delta)
-		current_ticklimit = tick_limit_default
+		current_ticklimit = TICK_LIMIT_RUNNING // [SIERRA-EDIT] - MC
 		if (processing * sleep_delta <= world.tick_lag)
-			current_ticklimit -= (tick_limit_default * 0.25) //reserve the tail 1/4 of the next tick for the mc if we plan on running next tick
+			current_ticklimit -= (TICK_LIMIT_RUNNING * 0.25) // [SIERRA-EDIT] - MC //reserve the tail 1/4 of the next tick for the mc if we plan on running next tick
 		sleep(world.tick_lag * (processing * sleep_delta))
 
 
@@ -421,8 +448,18 @@ var/global/datum/controller/master/Master = new
 		if (SS_flags & SS_NO_FIRE)
 			subsystemstocheck -= SS
 			continue
-		if ((SS_flags & (SS_TICKER|SS_KEEP_TIMING)) == SS_KEEP_TIMING && SS.last_fire + (SS.wait * 0.75) > world.time)
+		// [SIERRA-EDIT] - MC
+		if ((SS_flags & (SS_TICKER|SS_BACKGROUND)) == SS_TICKER)
+			if ((SS_flags & SS_KEEP_TIMING) && SS.last_fire + (SS.wait * 0.75) > world.time)
+				continue
+		else
+			if ((SS_flags & SS_KEEP_TIMING) && SS.last_fire + (SS.wait * 0.75) > world.time)
+				continue
+		if (SS.postponed_fires > 0)
+			SS.postponed_fires--
+			SS.update_nextfire()
 			continue
+		// [/SIERRA-EDIT]
 		SS.enqueue()
 	. = 1
 
@@ -445,13 +482,13 @@ var/global/datum/controller/master/Master = new
 
 	//keep running while we have stuff to run and we haven't gone over a tick
 	//	this is so subsystems paused eariler can use tick time that later subsystems never used
-	while (ran && queue_head && world.tick_usage < tick_limit_mc)
+	while (ran && queue_head && TICK_USAGE < TICK_LIMIT_MC) // [SIERRA-EDIT] - MC
 		ran = FALSE
 		bg_calc = FALSE
 		current_tick_budget = queue_priority_count
 		queue_node = queue_head
 		while (queue_node)
-			if (ran && world.tick_usage > tick_limit_default)
+			if (ran && TICK_USAGE > TICK_LIMIT_RUNNING) // [SIERRA-EDIT] - MC
 				break
 
 			queue_node_flags = queue_node.flags
@@ -463,7 +500,7 @@ var/global/datum/controller/master/Master = new
 			//(unless we haven't even ran anything this tick, since its unlikely they will ever be able run
 			//	in those cases, so we just let them run)
 			if (queue_node_flags & SS_NO_TICK_CHECK)
-				if (queue_node.tick_usage > tick_limit_default - world.tick_usage && ran_non_ticker)
+				if (!(queue_node_flags & SS_BACKGROUND) && queue_node.tick_usage > TICK_LIMIT_RUNNING - TICK_USAGE && ran_non_ticker) // [SIERRA-EDIT] - MC
 					queue_node.queued_priority += queue_priority_count * 0.1
 					queue_priority_count -= queue_node_priority
 					queue_priority_count += queue_node.queued_priority
@@ -471,11 +508,11 @@ var/global/datum/controller/master/Master = new
 					queue_node = queue_node.queue_next
 					continue
 
-			if ((queue_node_flags & SS_BACKGROUND) && !bg_calc)
+			if (!bg_calc && (queue_node_flags & SS_BACKGROUND)) // [SIERRA-EDIT] - MC
 				current_tick_budget = queue_priority_count_bg
 				bg_calc = TRUE
 
-			tick_remaining = tick_limit_default - world.tick_usage
+			tick_remaining = TICK_LIMIT_RUNNING - TICK_USAGE // [SIERRA-EDIT] - MC
 
 			if (current_tick_budget > 0 && queue_node_priority > 0)
 				tick_precentage = tick_remaining / (current_tick_budget / queue_node_priority)
@@ -484,7 +521,7 @@ var/global/datum/controller/master/Master = new
 
 			tick_precentage = max(tick_precentage*0.5, tick_precentage-queue_node.tick_overrun)
 
-			current_ticklimit = round(world.tick_usage + tick_precentage)
+			current_ticklimit = round(TICK_USAGE + tick_precentage) // [SIERRA-EDIT] - MC
 
 			if (!(queue_node_flags & SS_TICKER))
 				ran_non_ticker = TRUE
@@ -533,14 +570,7 @@ var/global/datum/controller/master/Master = new
 			queue_node.last_fire = world.time
 			queue_node.times_fired++
 
-			if (queue_node_flags & SS_TICKER)
-				queue_node.next_fire = world.time + (world.tick_lag * queue_node.wait)
-			else if (queue_node_flags & SS_POST_FIRE_TIMING)
-				queue_node.next_fire = world.time + queue_node.wait + (world.tick_lag * (queue_node.tick_overrun/100))
-			else if (queue_node_flags & SS_KEEP_TIMING)
-				queue_node.next_fire += queue_node.wait
-			else
-				queue_node.next_fire = queue_node.queued_time + queue_node.wait + (world.tick_lag * (queue_node.tick_overrun/100))
+			queue_node.update_nextfire() // [SIERRA-EDIT] - MC
 
 			queue_node.queued_time = 0
 
@@ -549,17 +579,23 @@ var/global/datum/controller/master/Master = new
 
 			queue_node = queue_node.queue_next
 
+	// [SIERRA-ADD] - MC
+	if (queue_priority_count < 0 || queue_priority_count_bg < 0)
+		stack_trace("%.MC: RunQueue exited with budget desync: queue_priority_count=[queue_priority_count], queue_priority_count_bg=[queue_priority_count_bg], queue_head=[queue_head]")
+		return -1
+	// [/SIERRA-ADD]
 	. = 1
 
 //resets the queue, and all subsystems, while filtering out the subsystem lists
 //	called if any mc's queue procs runtime or exit improperly.
 /datum/controller/master/proc/SoftReset(list/ticker_SS, list/runlevel_SS)
 	. = 0
-	log_world("MC: SoftReset called, resetting MC queue state.")
+	stack_trace("MC: SoftReset called, resetting MC queue state.") // [SIERRA-EDIT] - MC
+
 	if (!istype(subsystems) || !istype(ticker_SS) || !istype(runlevel_SS))
 		log_world("MC: SoftReset: Bad list contents: '[subsystems]' '[ticker_SS]' '[runlevel_SS]'")
 		return
-	var/subsystemstocheck = subsystems + ticker_SS
+	var/subsystemstocheck = subsystems | ticker_SS // [SIERRA-EDIT] - MC
 	for(var/I in runlevel_SS)
 		subsystemstocheck |= I
 
@@ -594,6 +630,17 @@ var/global/datum/controller/master/Master = new
 	. = 1
 
 
+// [SIERRA-ADD] - MC
+/datum/controller/master/proc/UpdateTickRate()
+	if (!processing)
+		return
+	var/client_count = length(GLOB.clients)
+	if (client_count < config.disable_high_pop_mc_mode_amount)
+		processing = config.base_mc_tick_rate
+	else if (client_count > config.high_pop_mc_mode_amount)
+		processing = config.high_pop_mc_tick_rate
+// [/SIERRA-ADD]
+
 /datum/controller/master/UpdateStat(time)
 	if (PreventUpdateStat(time))
 		return ..()
@@ -607,11 +654,12 @@ var/global/datum/controller/master/Master = new
 		MAP: [round(world.map_cpu, 0.1)]%  \
 		Atoms: [length(world.contents)]\n\
 		Server: [world.byond_version].[world.byond_build]  \
+		Compiler: [DM_VERSION].[DM_BUILD]  \
 		World Size: <[world.maxx],[world.maxy],[world.maxz]>\n\
 		Hub: [config.hub_visible ? "Y" : "N"]  \
 		Reachable: [world.reachable ? "Y" : "N"]  \
 		Address: [world.internet_address]:[world.port]\
-	"}) //515: add 'Compiler: [BYOND_VERSION].[BYOND_BUILD]' after Server
+	"})
 
 
 /datum/controller/master/StartLoadingMap()

@@ -157,8 +157,14 @@
 		to_chat(src, SPAN_WARNING("You are running an older version of BYOND than the server and may experience issues."))
 		to_chat(src, SPAN_WARNING("It is recommended that you update to at least [DM_VERSION] at http://www.byond.com/download/."))
 	to_chat(src, SPAN_WARNING("If the title screen is black, resources are still downloading. Please be patient until the title screen appears."))
+	if (!src)
+		return
 	GLOB.clients += src
 	GLOB.ckey_directory[ckey] = src
+	Master.UpdateTickRate() // [SIERRA-ADD] - MC
+
+	if(byond_version >= 516)
+		winset(src, null, list("browser-options" = "find,refresh"))
 
 	//Admin Authorisation
 	holder = admin_datums[ckey]
@@ -230,6 +236,7 @@
 	// This turns out to be a touch too much when a bunch of people are connecting at once from a restart during init.
 	if (GAME_STATE & RUNLEVELS_DEFAULT)
 		spawn()
+		log_and_message_staff(SPAN_NOTICE("[key_name_admin(src)] has connected to the server."))
 		if (!check_rights(R_MOD, FALSE, src))
 			// Check connections
 			var/list/connections = fetch_connections()
@@ -256,6 +263,10 @@
 		if (T.status == TICKET_OPEN && T.owner.ckey == ckey)
 			message_staff("[key_name_admin(src)] has left the game with an open ticket. Status: [length(T.assigned_admins) ? "Assigned to: [english_list(T.assigned_admin_ckeys())]" : SPAN_DANGER("Unassigned.")]")
 			break
+	if (atom_outline)
+		images -= atom_outline
+		atom_outline = null
+	outline_atom = null
 	if (holder)
 		holder.owner = null
 		GLOB.admins -= src
@@ -265,6 +276,7 @@
 	GLOB.ckey_directory -= ckey
 	ticket_panels -= src
 	GLOB.clients -= src
+	Master.UpdateTickRate() // [SIERRA-ADD] - MC
 	..()
 	return QDEL_HINT_HARDDEL_NOW
 
@@ -414,6 +426,7 @@
 		'html/images/leaguelogo.png',
 		'html/images/ouerelogo.png',
 		'html/images/terstenlogo.png',
+		'html/images/kmslogo.png',
 		// [/SIERRA-ADD]
 		'html/images/zhlogo.png'
 		)
@@ -440,6 +453,16 @@
 	set category = "OOC"
 	if(prefs)
 		prefs.open_setup_window(usr)
+
+/client/verb/character_priorities()
+	set name = "Character Priorities"
+	set category = "OOC"
+	if(!prefs)
+		return
+	if(config.maximum_queued_characters > 1)
+		prefs.open_prefs_ordering_panel(usr)
+	else
+		to_chat(usr, SPAN_WARNING("The character priority queue is currently disabled"))
 
 
 /client/MouseDrag(src_object, over_object, src_location, over_location, src_control, over_control, params)

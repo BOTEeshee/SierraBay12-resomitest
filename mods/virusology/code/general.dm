@@ -1,29 +1,29 @@
-/datum/species
+/singleton/species
 	var/virus_immune
 
-/datum/species/adherent
+/singleton/species/adherent
 	virus_immune = 1
 
-/datum/species/machine
+/singleton/species/machine
 	virus_immune = 1
 
-/datum/species/vox
+/singleton/species/vox
 	virus_immune = 1
 
-/datum/species/starlight
+/singleton/species/starlight
 	virus_immune = 1
 
-/datum/species/alium
+/singleton/species/alium
 	virus_immune = 1
 
-/datum/species/mantid
+/singleton/species/mantid
 	virus_immune = 1
 
 
-/datum/species/shapeshifter/promethean
+/singleton/species/shapeshifter/promethean
 	virus_immune = 1
 
-/datum/species/proc/get_virus_immune(mob/living/carbon/human/H)
+/singleton/species/proc/get_virus_immune(mob/living/carbon/human/H)
 	return ((H && H.isSynthetic()) ? 1 : virus_immune)
 
 ///
@@ -247,3 +247,17 @@
 	if(breath && !internal && LAZYLEN(virus2) > 0 && prob(10))
 		for(var/mob/living/carbon/M in view(1,src))
 			src.spread_disease_to(M)
+
+/mob/living/carbon/human/proc/cure_all_viruses(gain_antibodies = 0)
+	if (LAZYLEN(virus2) > 0)
+		for (var/ID in virus2)
+			var/datum/disease2/disease/V = virus2[ID]
+			V.cure(src, gain_antibodies)
+
+			// making sure that it is removed
+			if(virus2[ID])
+				virus2.Remove("[ID]")
+
+/mob/living/carbon/human/rejuvenate()
+	cure_all_viruses()
+	..()

@@ -46,7 +46,8 @@
 		/area/turbolift,
 		/area/supply,
 		/area/syndicate_elite_squad,
-		/area/template_noop
+		/area/template_noop,
+		/area/carp_racing
 	)
 
 	var/list/area_usage_test_exempted_root_areas = list(
@@ -54,8 +55,15 @@
 		/area/exoplanet,
 		/area/ship,
 		/area/mine,
-		/area/bluespaceriver)
-		// /area/mine, /area/bluespaceriver //[SIERRA-ADD]
+		/area/bluespaceriver,
+		/area/lar_maria,
+		/area/casino,
+		/area/meatstation,
+		/area/lost_supply_base,
+		/area/magshield,
+		/area/shuttle/escape_pod,
+		)
+		// /area/mine, /area/bluespaceriver, /area/lar_maria, /area/casino, /area/meatstation, /area/lost_supply_base, /area/magshield, /area/shuttle/escape_pod //[SIERRA-ADD]
 
 	var/list/area_purity_test_exempt_areas = list()
 

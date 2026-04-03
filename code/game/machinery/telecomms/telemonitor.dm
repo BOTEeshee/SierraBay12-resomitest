@@ -35,28 +35,28 @@
 
 		if(0)
 			dat += "<br>[temp]<br><br>"
-			dat += "<br>Current Network: <a href='?src=\ref[src];network=1'>[network]</a><br>"
+			dat += "<br>Current Network: <a href='byond://?src=\ref[src];network=1'>[network]</a><br>"
 			if(length(machinelist))
 				dat += "<br>Detected Network Entities:<ul>"
 				for(var/obj/machinery/telecomms/T in machinelist)
-					dat += "<li><a href='?src=\ref[src];viewmachine=[T.id]'>\ref[T] [T.name]</a> ([T.id])</li>"
+					dat += "<li><a href='byond://?src=\ref[src];viewmachine=[T.id]'>\ref[T] [T.name]</a> ([T.id])</li>"
 				dat += "</ul>"
-				dat += "<br><a href='?src=\ref[src];operation=release'>\[Flush Buffer\]</a>"
+				dat += "<br><a href='byond://?src=\ref[src];operation=release'>\[Flush Buffer\]</a>"
 			else
-				dat += "<a href='?src=\ref[src];operation=probe'>\[Probe Network\]</a>"
+				dat += "<a href='byond://?src=\ref[src];operation=probe'>\[Probe Network\]</a>"
 
 
 		// --- Viewing Machine ---
 
 		if(1)
 			dat += "<br>[temp]<br>"
-			dat += "<center><a href='?src=\ref[src];operation=mainmenu'>\[Main Menu\]</a></center>"
+			dat += "<center><a href='byond://?src=\ref[src];operation=mainmenu'>\[Main Menu\]</a></center>"
 			dat += "<br>Current Network: [network]<br>"
 			dat += "Selected Network Entity: [SelectedMachine.name] ([SelectedMachine.id])<br>"
 			dat += "Linked Entities: <ol>"
 			for(var/obj/machinery/telecomms/T in SelectedMachine.links)
 				if(!T.hide)
-					dat += "<li><a href='?src=\ref[src];viewmachine=[T.id]'>\ref[T.id] [T.name]</a> ([T.id])</li>"
+					dat += "<li><a href='byond://?src=\ref[src];viewmachine=[T.id]'>\ref[T.id] [T.name]</a> ([T.id])</li>"
 			dat += "</ol>"
 
 
@@ -71,8 +71,9 @@
 /obj/machinery/computer/telecomms/monitor/Topic(href, href_list)
 	if(..())
 		return
+	var/mob/user = usr
 
-	usr.set_machine(src)
+	user.set_machine(src)
 
 	if(href_list["viewmachine"])
 		screen = 1
@@ -110,8 +111,8 @@
 
 	if(href_list["network"])
 
-		var/newnet = input(usr, "Which network do you want to view?", "Comm Monitor", network) as null|text
-		if(newnet && ((usr in range(1, src) || issilicon(usr))))
+		var/newnet = input(user, "Which network do you want to view?", "Comm Monitor", network) as null|text
+		if(newnet && ((user in range(1, src) || issilicon(user))))
 			if(length(newnet) > 15)
 				temp = SPAN_COLOR("#d70b00", "- FAILED: NETWORK TAG STRING TOO LENGHTLY -")
 

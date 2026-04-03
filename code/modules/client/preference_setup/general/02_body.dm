@@ -4,7 +4,10 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 	var/species = SPECIES_HUMAN
 	var/gender = MALE					//gender of character (well duh)
 	var/pronouns = PRONOUNS_THEY_THEM
-	var/b_type = "A+"					//blood type (not-chooseable)
+	var/b_type = "A+"				//blood type (not-chooseable)
+	// [SIERRA-ADD] HEIGHT
+	var/height = HUMANHEIGHT_MEDIUM //character height
+	// [/SIERRA-ADD]
 	var/head_hair_style = "Bald"				//Hair type
 	var/head_hair_color = "#000000"
 	var/facial_hair_style = "Shaved"				//Face hair type
@@ -34,6 +37,9 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 	if(R.get_version() < 2 && pref.species == "booster")
 		pref.species = "human"
 	pref.age = R.read("age")
+	// [SIERRA-ADD] HEIGHT
+	pref.height = R.read("height")
+	// [/SIERRA-ADD]
 	pref.gender = R.read("gender")
 	pref.pronouns = R.read("pronouns")
 	if(R.get_version() < 3 && !(pref.pronouns))
@@ -67,7 +73,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 	pref.body_markings = R.read("body_markings")
 	pref.body_descriptors = R.read("body_descriptors")
 	pref.picked_traits = R.read("traits")
-	pref.picked_traits = sanitize_trait_prefs(pref.picked_traits)
+	pref.picked_traits = sanitize_trait_prefs(pref.picked_traits, R.get_version(), pref.species)
 
 
 /datum/category_item/player_setup_item/physical/body/save_character(datum/pref_record_writer/W)
@@ -75,6 +81,9 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 	W.write("gender", pref.gender)
 	W.write("pronouns", pref.pronouns)
 	W.write("age", pref.age)
+	// [SIERRA-ADD] HEIGHT
+	W.write("height", pref.height)
+	// [/SIERRA-ADD]
 	W.write("head_hair_color", pref.head_hair_color)
 	W.write("facial_hair_color", pref.facial_hair_color)
 	W.write("skin_tone", pref.skin_tone)
@@ -92,6 +101,10 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 	W.write("traits", pref.picked_traits)
 
 
+/datum/category_item/player_setup_item/physical/body/load_slot(datum/pref_record_reader/R, datum/preferences_slot/slot)
+	slot.age = R.read("age")
+
+
 /datum/category_item/player_setup_item/physical/body/sanitize_character()
 	pref.head_hair_color = sanitize_hexcolor(pref.head_hair_color)
 	pref.facial_hair_color = sanitize_hexcolor(pref.facial_hair_color)
@@ -101,13 +114,16 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 	pref.facial_hair_style		= sanitize_inlist(pref.facial_hair_style, GLOB.facial_hair_styles_list, initial(pref.facial_hair_style))
 	pref.b_type			= sanitize_text(pref.b_type, initial(pref.b_type))
 
-	if(!pref.species || !(pref.species in playable_species))
+	if(!pref.species || !(pref.species in GLOB.playable_species))
 		pref.species = SPECIES_HUMAN
-	var/datum/species/mob_species = all_species[pref.species]
+	var/singleton/species/mob_species = GLOB.species_by_name[pref.species]
 
 	pref.gender = sanitize_inlist(pref.gender, mob_species.genders, pick(mob_species.genders))
 	pref.pronouns = sanitize_inlist(pref.pronouns, mob_species.pronouns, pick(mob_species.pronouns))
 	pref.age = sanitize_integer(pref.age, mob_species.min_age, mob_species.max_age, initial(pref.age))
+	// [SIERRA-ADD] HEIGHT
+	pref.height = sanitize_inlist(pref.height, GLOB.heights_list, initial(pref.height))
+	// [/SIERRA-ADD]
 
 	var/low_skin_tone = mob_species ? (35 - mob_species.max_skin_tone()) : -185
 	sanitize_integer(pref.skin_tone, low_skin_tone, 34, initial(pref.skin_tone))
@@ -143,7 +159,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 
 /datum/category_item/player_setup_item/physical/body/content(mob/user)
 	. = list()
-	var/datum/species/mob_species = all_species[pref.species]
+	var/singleton/species/mob_species = GLOB.species_by_name[pref.species]
 	. += "<b>Species</b> [BTN("show_species", "Info")]"
 	. += "<br />[TBTN("set_species", mob_species.name, "Selected")]"
 	. += "<br /><br /><b>Body</b> [BTN("random", "Randomize")]"
@@ -276,18 +292,18 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 	. = jointext(., null)
 
 
-/datum/category_item/player_setup_item/physical/body/proc/HasAppearanceFlag(datum/species/mob_species, flag)
+/datum/category_item/player_setup_item/physical/body/proc/HasAppearanceFlag(singleton/species/mob_species, flag)
 	return mob_species && (mob_species.appearance_flags & flag)
 
 /datum/category_item/player_setup_item/physical/body/OnTopic(href,list/href_list, mob/user)
-	var/datum/species/mob_species = all_species[pref.species]
+	var/singleton/species/mob_species = GLOB.species_by_name[pref.species]
 
 	if(href_list["toggle_species_verbose"])
 		hide_species = !hide_species
 		return TOPIC_REFRESH
 
 	else if(href_list["gender"])
-		mob_species = all_species[pref.species]
+		mob_species = GLOB.species_by_name[pref.species]
 		var/new_gender = input(user, "Choose your character's bodytype:", CHARACTER_PREFERENCE_INPUT_TITLE, pref.gender) as null|anything in mob_species.genders
 		if(new_gender && CanUseTopic(user) && (new_gender in mob_species.genders))
 			pref.gender = new_gender
@@ -299,6 +315,10 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 		var/new_age = input(user, "Choose your character's age:\n([mob_species.min_age]-[mob_species.max_age])", CHARACTER_PREFERENCE_INPUT_TITLE, pref.age) as num|null
 		if(new_age && CanUseTopic(user))
 			pref.age = max(min(round(text2num(new_age)), mob_species.max_age), mob_species.min_age)
+			for(var/datum/preferences_slot/slot in pref.slot_priority_list)
+				if(slot.slot != pref.default_slot)
+					continue
+				slot.age = pref.age
 			pref.skills_allocated = pref.sanitize_skills(pref.skills_allocated)		// The age may invalidate skill loadouts
 			return TOPIC_REFRESH
 
@@ -308,7 +328,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 
 	else if(href_list["pronouns"])
 		var/new_pronouns = input(user, "Choose your character's pronouns:", CHARACTER_PREFERENCE_INPUT_TITLE, pref.pronouns) as null|anything in mob_species.pronouns
-		mob_species = all_species[pref.species]
+		mob_species = GLOB.species_by_name[pref.species]
 		if(new_pronouns && CanUseTopic(user) && (new_pronouns in mob_species.pronouns))
 			pref.pronouns = new_pronouns
 		return TOPIC_REFRESH
@@ -318,10 +338,16 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 			var/desc_id = href_list["change_descriptor"]
 			if(pref.body_descriptors[desc_id])
 				var/datum/mob_descriptor/descriptor = mob_species.descriptors[desc_id]
+	//[SIERRA-EDIT] HEIGHT
 				var/choice = input("Please select a descriptor.", "Descriptor") as null|anything in descriptor.chargen_value_descriptors
-				if(choice && mob_species.descriptors[desc_id]) // Check in case they sneakily changed species.
+				if(choice && mob_species.descriptors[desc_id])
 					pref.body_descriptors[desc_id] = descriptor.chargen_value_descriptors[choice]
-					return TOPIC_REFRESH_UPDATE_PREVIEW
+				if(desc_id == "height")
+					var/idx = pref.body_descriptors["height"]
+					if(idx && idx <= length(GLOB.heights_list))
+						pref.height = GLOB.heights_list[idx]
+				return TOPIC_REFRESH_UPDATE_PREVIEW
+	//[/SIERRA-EDIT] HEIGHT
 
 	else if(href_list["blood_type"])
 		var/new_b_type = input(user, "Choose your character's blood-type:", CHARACTER_PREFERENCE_INPUT_TITLE) as null|anything in valid_bloodtypes
@@ -330,18 +356,18 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 			return TOPIC_REFRESH
 
 	else if(href_list["show_species"])
-		var/choice = input("Which species would you like to look at?") as null|anything in playable_species
+		var/choice = input("Which species would you like to look at?") as null|anything in GLOB.playable_species
 		if(choice)
-			var/datum/species/current_species = all_species[choice]
+			var/singleton/species/current_species = GLOB.species_by_name[choice]
 			show_browser(user, current_species.get_description(), "window=species;size=700x400")
 			return TOPIC_HANDLED
 
 	else if(href_list["set_species"])
 
 		var/list/species_to_pick = list()
-		for(var/species in playable_species)
+		for(var/species in GLOB.playable_species)
 			if(!GLOB.skip_allow_lists && !check_rights(R_ADMIN, 0) && config.usealienwhitelist)
-				var/datum/species/current_species = all_species[species]
+				var/singleton/species/current_species = GLOB.species_by_name[species]
 				if(!(current_species.spawn_flags & SPECIES_CAN_JOIN))
 					continue
 				else if((current_species.spawn_flags & SPECIES_IS_WHITELISTED) && !is_alien_whitelisted(preference_mob(),current_species))
@@ -349,13 +375,13 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 			species_to_pick += species
 
 		var/choice = input("Select a species to play as.") as null|anything in species_to_pick
-		if(!choice || !(choice in all_species))
+		if(!choice || !(choice in GLOB.species_by_name))
 			return
 
 		var/prev_species = pref.species
 		pref.species = choice
 		if(prev_species != pref.species)
-			mob_species = all_species[pref.species]
+			mob_species = GLOB.species_by_name[pref.species]
 			if(!(pref.gender in mob_species.genders))
 				pref.gender = mob_species.genders[1]
 			if(!(pref.pronouns in mob_species.pronouns))
@@ -379,7 +405,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 
 			sanitize_organs()
 
-			if(!HasAppearanceFlag(all_species[pref.species], SPECIES_APPEARANCE_HAS_UNDERWEAR))
+			if(!HasAppearanceFlag(GLOB.species_by_name[pref.species], SPECIES_APPEARANCE_HAS_UNDERWEAR))
 				pref.all_underwear.Cut()
 
 			return TOPIC_REFRESH_UPDATE_PREVIEW
@@ -388,7 +414,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 		if(!HasAppearanceFlag(mob_species, SPECIES_APPEARANCE_HAS_HAIR_COLOR))
 			return TOPIC_NOACTION
 		var/new_hair = input(user, "Choose your character's hair colour:", CHARACTER_PREFERENCE_INPUT_TITLE, pref.head_hair_color) as color|null
-		if(new_hair && HasAppearanceFlag(all_species[pref.species], SPECIES_APPEARANCE_HAS_HAIR_COLOR) && CanUseTopic(user))
+		if(new_hair && HasAppearanceFlag(GLOB.species_by_name[pref.species], SPECIES_APPEARANCE_HAS_HAIR_COLOR) && CanUseTopic(user))
 			pref.head_hair_color = new_hair
 			return TOPIC_REFRESH_UPDATE_PREVIEW
 
@@ -406,7 +432,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 		else
 			new_h_style = input(user, "Choose your character's hair style:", CHARACTER_PREFERENCE_INPUT_TITLE, pref.head_hair_style)  as null|anything in valid_hairstyles
 
-		mob_species = all_species[pref.species]
+		mob_species = GLOB.species_by_name[pref.species]
 		if(new_h_style && CanUseTopic(user) && (new_h_style in mob_species.get_hair_styles()))
 			pref.head_hair_style = new_h_style
 			return TOPIC_REFRESH_UPDATE_PREVIEW
@@ -415,7 +441,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 		if(!HasAppearanceFlag(mob_species, SPECIES_APPEARANCE_HAS_HAIR_COLOR))
 			return TOPIC_NOACTION
 		var/new_facial = input(user, "Choose your character's facial-hair colour:", CHARACTER_PREFERENCE_INPUT_TITLE, pref.facial_hair_color) as color|null
-		if(new_facial && HasAppearanceFlag(all_species[pref.species], SPECIES_APPEARANCE_HAS_HAIR_COLOR) && CanUseTopic(user))
+		if(new_facial && HasAppearanceFlag(GLOB.species_by_name[pref.species], SPECIES_APPEARANCE_HAS_HAIR_COLOR) && CanUseTopic(user))
 			pref.facial_hair_color = new_facial
 			return TOPIC_REFRESH_UPDATE_PREVIEW
 
@@ -423,7 +449,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 		if(!HasAppearanceFlag(mob_species, SPECIES_APPEARANCE_HAS_EYE_COLOR))
 			return TOPIC_NOACTION
 		var/new_eyes = input(user, "Choose your character's eye colour:", CHARACTER_PREFERENCE_INPUT_TITLE, pref.eye_color) as color|null
-		if(new_eyes && HasAppearanceFlag(all_species[pref.species], SPECIES_APPEARANCE_HAS_EYE_COLOR) && CanUseTopic(user))
+		if(new_eyes && HasAppearanceFlag(GLOB.species_by_name[pref.species], SPECIES_APPEARANCE_HAS_EYE_COLOR) && CanUseTopic(user))
 			pref.eye_color = new_eyes
 			return TOPIC_REFRESH_UPDATE_PREVIEW
 
@@ -439,7 +465,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 		if(!HasAppearanceFlag(mob_species, SPECIES_APPEARANCE_HAS_A_SKIN_TONE))
 			return TOPIC_NOACTION
 		var/new_s_tone = input(user, "Choose your character's skin-tone. Lower numbers are lighter, higher are darker. Range: 1 to [mob_species.max_skin_tone()]", CHARACTER_PREFERENCE_INPUT_TITLE, (-pref.skin_tone) + 35) as num|null
-		mob_species = all_species[pref.species]
+		mob_species = GLOB.species_by_name[pref.species]
 		if(new_s_tone && HasAppearanceFlag(mob_species, SPECIES_APPEARANCE_HAS_A_SKIN_TONE) && CanUseTopic(user))
 			pref.skin_tone = 35 - max(min(round(new_s_tone), mob_species.max_skin_tone()), 1)
 		return TOPIC_REFRESH_UPDATE_PREVIEW
@@ -448,7 +474,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 		if(!HasAppearanceFlag(mob_species, SPECIES_APPEARANCE_HAS_SKIN_COLOR))
 			return TOPIC_NOACTION
 		var/new_skin = input(user, "Choose your character's skin colour: ", CHARACTER_PREFERENCE_INPUT_TITLE, pref.skin_color) as color|null
-		if(new_skin && HasAppearanceFlag(all_species[pref.species], SPECIES_APPEARANCE_HAS_SKIN_COLOR) && CanUseTopic(user))
+		if(new_skin && HasAppearanceFlag(GLOB.species_by_name[pref.species], SPECIES_APPEARANCE_HAS_SKIN_COLOR) && CanUseTopic(user))
 			pref.skin_color = new_skin
 			return TOPIC_REFRESH_UPDATE_PREVIEW
 
@@ -466,13 +492,17 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 		else
 			new_f_style = input(user, "Choose your character's facial-hair style:", CHARACTER_PREFERENCE_INPUT_TITLE, pref.facial_hair_style)  as null|anything in valid_facialhairstyles
 
-		mob_species = all_species[pref.species]
+		mob_species = GLOB.species_by_name[pref.species]
 		if(new_f_style && CanUseTopic(user) && (new_f_style in mob_species.get_facial_hair_styles(pref.gender)))
 			pref.facial_hair_style = new_f_style
 			return TOPIC_REFRESH_UPDATE_PREVIEW
 
 	else if(href_list["marking_style"])
 		var/list/disallowed_markings = list()
+		//[SIERRA-ADD]
+		var/list/robo_limbs = list()
+		var/list/prosthetic_temp = list()
+		//[//SIERRA-ADD]
 		for (var/M in pref.body_markings)
 			var/datum/sprite_accessory/marking/mark_style = GLOB.body_marking_styles_list[M]
 			disallowed_markings |= mark_style.disallows
@@ -481,11 +511,38 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 			var/datum/sprite_accessory/S = usable_markings[M]
 			if(is_type_in_list(S, disallowed_markings) || (S.species_allowed && !(mob_species.get_bodytype() in S.species_allowed)) || (S.subspecies_allowed && !(mob_species.name in S.subspecies_allowed)))
 				usable_markings -= M
+		//[SIERRA-ADD/EDIT]
+		for(var/P in pref.organ_data)
+			if(pref.organ_data[P] == "cyborg")
+				robo_limbs += P
 
-		var/new_marking = input(user, "Choose a body marking:", CHARACTER_PREFERENCE_INPUT_TITLE)  as null|anything in usable_markings
-		if(new_marking && CanUseTopic(user))
-			pref.body_markings[new_marking] = "#000000" //New markings start black
-			return TOPIC_REFRESH_UPDATE_PREVIEW
+		if(LAZYLEN(robo_limbs))
+			var/option = alert("Select which type of bodymarks?", "select", "Flesh", "Robotic")
+			switch(option)
+				if("Flesh")
+					var/new_marking = input(user, "Choose a body marking:", CHARACTER_PREFERENCE_INPUT_TITLE)  as null|anything in usable_markings
+					if(new_marking && CanUseTopic(user))
+						pref.body_markings[new_marking] = "#000000" //New markings start black
+				if("Robotic")
+					if(LAZYLEN(robo_limbs))
+						var/bodypart = input(user, "Body Part for marking:", CHARACTER_PREFERENCE_INPUT_TITLE)  as null|anything in robo_limbs
+						var/sorted
+						if(bodypart && CanUseTopic(user))
+							for(var/M in GLOB.body_marking_styles_list)
+								var/datum/sprite_accessory/marking/mark_style = GLOB.body_marking_styles_list[M]
+								if(mark_style.robo_paints == TRUE && !(M in prosthetic_temp))
+									if(bodypart in mark_style.body_parts)
+										LAZYADD(sorted, M)
+						var/new_robo_marking = input(user, "Choose marking:", CHARACTER_PREFERENCE_INPUT_TITLE)  as null|anything in sorted
+						if(new_robo_marking && CanUseTopic(user))
+							pref.body_markings[new_robo_marking] = "#000000"
+		else
+			var/new_marking = input(user, "Choose a body marking:", CHARACTER_PREFERENCE_INPUT_TITLE)  as null|anything in usable_markings
+			if(new_marking && CanUseTopic(user))
+				pref.body_markings[new_marking] = "#000000" //New markings start black
+
+		return TOPIC_REFRESH_UPDATE_PREVIEW
+		//[/SIERRA-ADD/EDIT]
 
 	else if(href_list["marking_remove"])
 		var/M = href_list["marking_remove"]
@@ -501,6 +558,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 
 	else if(href_list["reset_limbs"])
 		reset_limbs()
+		pref.body_markings.Cut() //[SIERRA-ADD
 		return TOPIC_REFRESH_UPDATE_PREVIEW
 
 	else if(href_list["limbs"])
@@ -508,7 +566,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 		var/list/limb_selection_list = list("Left Leg","Right Leg","Left Arm","Right Arm","Left Foot","Right Foot","Left Hand","Right Hand","Full Body")
 
 		// Full prosthetic bodies without a brain are borderline unkillable so make sure they have a brain to remove/destroy.
-		var/datum/species/current_species = all_species[pref.species]
+		var/singleton/species/current_species = GLOB.species_by_name[pref.species]
 		if(current_species.spawn_flags & SPECIES_NO_FBP_CHARGEN)
 			limb_selection_list -= "Full Body"
 		else if(pref.organ_data[BP_CHEST] == "cyborg")
@@ -593,7 +651,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 					pref.rlimb_data[second_limb] = null
 
 			if("Prosthesis")
-				var/datum/species/temp_species = pref.species ? all_species[pref.species] : all_species[SPECIES_HUMAN]
+				var/singleton/species/temp_species = pref.species ? GLOB.species_by_name[pref.species] : GLOB.species_by_name[SPECIES_HUMAN]
 				var/tmp_species = temp_species.get_bodytype(user)
 				var/list/usable_manufacturers = list()
 				for(var/company in chargen_robolimbs)
@@ -658,6 +716,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 
 		if(pref.organ_data[BP_CHEST] == "cyborg")
 			organ_choices -= "Normal"
+			organ_choices -= "Assisted"
 			organ_choices += "Synthetic"
 
 		var/new_state = input(user, "What state do you wish the organ to be in?") as null|anything in organ_choices
@@ -694,7 +753,32 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 		if (!selected || !istype(selected))
 			return
 
+		var/remaining_budget = mob_species.trait_budget
+		for (var/existing_type as anything in pref.picked_traits)
+			var/singleton/trait/existing_trait = GET_SINGLETON(existing_type)
+			if (!existing_trait || !istype(existing_trait))
+				continue
+			if (LAZYISIN(existing_trait.incompatible_traits, selected.type) || LAZYISIN(selected.incompatible_traits, existing_type))
+				to_chat(usr, SPAN_WARNING("\The [selected.name] trait is incompatible with [existing_trait.name]."))
+				return
+
+			///This snippet handles calculating remaining budget.
+			if (length(existing_trait.metaoptions))
+				var/list/ex_metaoptions = pref.picked_traits[existing_trait.type]
+				for (var/metaoption in ex_metaoptions)
+					remaining_budget -= existing_trait.GetCost(metaoption)
+			else
+				remaining_budget -= existing_trait.GetCost()
+
 		var/list/possible_levels = selected.levels
+		if (selected.type in mob_species.traits)
+			var/minimum_level = mob_species.traits[selected.type]
+			var/cut = possible_levels.Find(minimum_level)
+			if (cut >= length(possible_levels)) //get_selectable_traits() already weeded out traits where Cut(1, cut + 1) returns an out of bound error. This is just for safety.
+				crash_with("Tried to cause an out of bounds error. ")
+				return
+			possible_levels.Cut(1, cut + 1)
+
 		var/selected_level
 		if (length(possible_levels) > 1)
 			var/list/letterized_levels
@@ -706,24 +790,24 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 			selected_level = letterized_levels[letterized_input]
 		else
 			selected_level = possible_levels[1]
+			to_chat(usr, SPAN_NOTICE ("The only level available for this trait is [LetterizeSeverity(selected_level)]."))
 
 		var/additional_data
 		if (length(selected.metaoptions))
 			var/list/sanitized_metaoptions
 			for (var/atom/option as anything in selected.metaoptions)
-				var/named_option = initial(option.name)
+				var/cost = isnull(selected.metaoptions[option]) ? selected.budget_cost : selected.metaoptions[option]
+				var/named_option = initial(option.name) + " ([cost])"
 				LAZYSET(sanitized_metaoptions, named_option, option)
 
-			var/additional_input = input(user, "[selected.addprompt]", "Select Option") as null | anything in sanitized_metaoptions
+			var/additional_input = input(user, "[selected.addprompt]", "Select Option") as null | anything in sortAssoc(sanitized_metaoptions)
+			if (!additional_input)
+				return
 			additional_data = sanitized_metaoptions[additional_input]
 
-		for (var/existing_type as anything in pref.picked_traits)
-			var/singleton/trait/existing_trait = GET_SINGLETON(existing_type)
-			if (!existing_trait || !istype(existing_trait))
-				continue
-			if (LAZYISIN(existing_trait.incompatible_traits, selected.type) || LAZYISIN(selected.incompatible_traits, existing_type))
-				to_chat(usr, SPAN_WARNING("The [selected.name] trait is incompatible with [existing_trait.name]."))
-				return
+		if (selected.GetCost(additional_data) && remaining_budget - selected.GetCost(additional_data) < 0)
+			to_chat(usr, SPAN_WARNING("\The [selected.name] trait cannot be selected as it costs [selected.GetCost(additional_data)] and the remaining trait budget is [remaining_budget]."))
+			return
 
 		if (additional_data)
 			var/list/interim = list()
@@ -751,7 +835,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 	ResetFacialHair()
 
 /datum/category_item/player_setup_item/proc/ResetHair()
-	var/datum/species/mob_species = all_species[pref.species]
+	var/singleton/species/mob_species = GLOB.species_by_name[pref.species]
 	var/list/valid_hairstyles = mob_species.get_hair_styles()
 
 	if(length(valid_hairstyles))
@@ -761,7 +845,7 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 		pref.head_hair_style = GLOB.hair_styles_list["Bald"]
 
 /datum/category_item/player_setup_item/proc/ResetFacialHair()
-	var/datum/species/mob_species = all_species[pref.species]
+	var/singleton/species/mob_species = GLOB.species_by_name[pref.species]
 	var/list/valid_facialhairstyles = mob_species.get_facial_hair_styles(pref.gender)
 
 	if(length(valid_facialhairstyles))
@@ -771,9 +855,15 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 		pref.facial_hair_style = GLOB.facial_hair_styles_list["Shaved"]
 
 /datum/category_item/player_setup_item/physical/body/proc/sanitize_organs()
-	var/datum/species/mob_species = all_species[pref.species]
-	if(mob_species && mob_species.spawn_flags & SPECIES_NO_ROBOTIC_INTERNAL_ORGANS)
-		for(var/name in pref.organ_data)
+	var/singleton/species/mob_species = GLOB.species_by_name[pref.species]
+	// Prevent speices that can't have robotic organs from having them
+	if (mob_species?.spawn_flags & SPECIES_NO_ROBOTIC_INTERNAL_ORGANS)
+		for (var/name in pref.organ_data)
 			var/status = pref.organ_data[name]
-			if(status in list("assisted","mechanical"))
+			if (status in list("assisted", "mechanical"))
 				pref.organ_data[name] = null
+	// Prevent FBPs from having assisted organs, some saved characters may have them
+	if (pref.organ_data[BP_CHEST] == "cyborg" && pref.organ_data[BP_EYES] == "assisted")
+		for (var/name in pref.organ_data)
+			if (name in list("heart", "eyes", "lungs", "liver", "kidneys"))
+				pref.organ_data[name] = "mechanical"

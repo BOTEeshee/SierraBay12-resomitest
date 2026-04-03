@@ -14,7 +14,7 @@
 
 	outfit_type = /singleton/hierarchy/outfit/job/sierra/crew/engineering/senior_engineer
 	allowed_branches = list(/datum/mil_branch/employee)
-	allowed_ranks = list(/datum/mil_rank/civ/nt)
+	allowed_ranks = list(/datum/mil_rank/civ/nt, /datum/mil_rank/civ/acting, /datum/mil_rank/civ/probation_employee)
 
 	skill_points = 24
 	min_skill = list(   SKILL_COMPUTER     = SKILL_BASIC,
@@ -58,14 +58,15 @@
 	supervisors = "Главному и Старшему инженеру"
 	selection_color = "#5b4d20"
 
-	total_positions = 4
-	spawn_positions = 4
+	total_positions = 6
+	spawn_positions = 6
 	minimal_player_age = 7
 	minimum_character_age = list(SPECIES_HUMAN = 22)
 	ideal_character_age = 24
 	economic_power = 6
 
 	alt_titles = list(
+		"Engineer Trainee" = /singleton/hierarchy/outfit/job/sierra/crew/engineering/engineer/trainee,
 		"Maintenance Technician" = /singleton/hierarchy/outfit/job/sierra/crew/engineering/engineer/maints,
 		"Structural Integrity Specialist" = /singleton/hierarchy/outfit/job/sierra/crew/engineering/engineer/maints,
 		"Electrician",
@@ -74,7 +75,7 @@
 
 	outfit_type = /singleton/hierarchy/outfit/job/sierra/crew/engineering/engineer
 	allowed_branches = list(/datum/mil_branch/employee, /datum/mil_branch/contractor)
-	allowed_ranks = list(/datum/mil_rank/civ/nt, /datum/mil_rank/civ/contractor)
+	allowed_ranks = list(/datum/mil_rank/civ/nt, /datum/mil_rank/civ/contractor, /datum/mil_rank/civ/probation_employee, /datum/mil_rank/civ/probation_contractor)
 
 	skill_points = 20
 	min_skill = list(   SKILL_COMPUTER     = SKILL_BASIC,
@@ -124,7 +125,7 @@
 
 	outfit_type = /singleton/hierarchy/outfit/job/sierra/crew/engineering/engineer/trainee
 	allowed_branches = list(/datum/mil_branch/employee, /datum/mil_branch/contractor)
-	allowed_ranks = list(/datum/mil_rank/civ/nt, /datum/mil_rank/civ/contractor)
+	allowed_ranks = list(/datum/mil_rank/civ/nt, /datum/mil_rank/civ/contractor, /datum/mil_rank/civ/probation_employee, /datum/mil_rank/civ/probation_contractor)
 
 	no_skill_buffs = TRUE
 	skill_points = 16
@@ -174,7 +175,7 @@
 
 	outfit_type = /singleton/hierarchy/outfit/job/sierra/crew/engineering/engineer/tcomms
 	allowed_branches = list(/datum/mil_branch/employee, /datum/mil_branch/contractor)
-	allowed_ranks = list(/datum/mil_rank/civ/nt, /datum/mil_rank/civ/contractor)
+	allowed_ranks = list(/datum/mil_rank/civ/nt, /datum/mil_rank/civ/contractor, /datum/mil_rank/civ/probation_employee, /datum/mil_rank/civ/probation_contractor)
 
 	skill_points = 12
 	min_skill = list(   SKILL_COMPUTER     = SKILL_TRAINED,
@@ -184,7 +185,7 @@
 	max_skill = list(   SKILL_ELECTRICAL   = SKILL_MAX,
 	                    SKILL_COMPUTER	   = SKILL_MAX)
 
-	access = list(	access_maint_tunnels, access_network, access_network_admin, access_external_airlocks,
+	access = list(	access_maint_tunnels, access_network, access_network_admin, access_engine,
 			       	access_tech_storage, access_emergency_storage, access_tcomsat)
 
 

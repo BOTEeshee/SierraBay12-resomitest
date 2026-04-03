@@ -12,11 +12,11 @@
 	//at 0.26 completely depleted after 60ish minutes of constant walking or 130 minutes of standing still
 	var/servo_cost = 0.26
 
-/obj/item/organ/internal/cell/New()
+/obj/item/organ/internal/cell/Initialize()
+	. = ..()
 	robotize()
 	if(ispath(cell))
 		cell = new cell(src)
-	..()
 
 /obj/item/organ/internal/cell/proc/percent()
 	if(!cell)
@@ -48,7 +48,7 @@
 	..()
 	if(!owner)
 		return
-	if(owner.stat == DEAD)	//not a drain anymore
+	if(owner.is_real_dead())	//not a drain anymore
 		return
 	var/cost = get_power_drain()
 	if(world.time - owner.l_move_time < 15)
@@ -97,7 +97,7 @@
 /obj/item/organ/internal/cell/replaced()
 	..()
 	// This is very ghetto way of rebooting an IPC. TODO better way.
-	if(owner && owner.stat == DEAD)
+	if(owner && owner.is_real_dead())
 		owner.set_stat(CONSCIOUS)
 		owner.visible_message(SPAN_DANGER("\The [owner] twitches visibly!"))
 
@@ -115,24 +115,29 @@
 	var/obj/item/device/mmi/stored_mmi
 	var/datum/mind/persistantMind //Mind that the organ will hold on to after being removed, used for transfer_and_delete
 	var/ownerckey // used in the event the owner is out of body
+	max_damage = 40 //[SIERRA-ADD]
 
 /obj/item/organ/internal/mmi_holder/Destroy()
 	stored_mmi = null
 	return ..()
 
-/obj/item/organ/internal/mmi_holder/New(mob/living/carbon/human/new_owner, internal)
-	..(new_owner, internal)
+/obj/item/organ/internal/mmi_holder/Initialize()
+	. = ..()
 	if(!stored_mmi)
 		stored_mmi = new(src)
-	sleep(-1)
+	return INITIALIZE_HINT_LATELOAD
+
+/obj/item/organ/internal/mmi_holder/LateInitialize()
 	update_from_mmi()
+	if (!owner)
+		return
 	persistantMind = owner.mind
 	ownerckey = owner.ckey
 
 /obj/item/organ/internal/mmi_holder/Process()
 	..()
 	if(owner?.is_asystole())
-		take_internal_damage(0.5)
+		take_internal_damage(0.25) //[SIERRA-EDIT] 0.5 было
 
 /obj/item/organ/internal/mmi_holder/handle_regeneration() // MMI will regenerate from small amounts of damage, e.g. damage that might occur when swapping a power cell
 	if(!damage || !owner || owner.is_asystole())
@@ -161,7 +166,7 @@
 	stored_mmi.update_icon()
 	icon_state = stored_mmi.icon_state
 
-	if(owner && owner.stat == DEAD)
+	if(owner && owner.is_real_dead())
 		owner.set_stat(CONSCIOUS)
 		owner.switch_from_dead_to_living_mob_list()
 		owner.visible_message(SPAN_DANGER("\The [owner] twitches visibly!"))

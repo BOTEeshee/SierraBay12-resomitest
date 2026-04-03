@@ -87,7 +87,7 @@ var/global/const/STASISCAGE_WIRE_LOCK      = 4
 
 /obj/machinery/stasis_cage/proc/release()
 	if (contained)
-		contained.dropInto(src)
+		contained.dropInto(loc)
 		if (HAS_FLAGS(contained.status_flags, GODMODE) && !god)
 			var/mob/living/SA = contained
 			CLEAR_FLAGS(SA.status_flags, GODMODE)
@@ -318,6 +318,8 @@ var/global/const/STASISCAGE_WIRE_LOCK      = 4
 /obj/machinery/stasis_cage/MouseDrop_T(mob/target, mob/user)
 	if(!CanMouseDrop(target, user))
 		return
+	if (istype(target, /obj/energy_net))
+		target = astype(target, /obj/energy_net).captured
 	if (!isanimal(target) && safety)
 		to_chat(user, SPAN_WARNING("\The [src] smartly refuses \the [target]."))
 		return
@@ -347,9 +349,9 @@ var/global/const/STASISCAGE_WIRE_LOCK      = 4
 	wire_count = 3
 	window_y = 500
 	descriptions = list(
-		new /datum/wire_description(STASISCAGE_WIRE_SAFETY, "This wire is connected to the internal biometric sensors.", SKILL_EXPERIENCED),
-		new /datum/wire_description(STASISCAGE_WIRE_RELEASE, "This wire is connected to the automated lid latches.", SKILL_TRAINED),
-		new /datum/wire_description(STASISCAGE_WIRE_LOCK, "This wire is connected to the lid motors.", SKILL_TRAINED)
+		new /datum/wire_description(STASISCAGE_WIRE_SAFETY, "This wire is connected to the internal biometric sensors.", "Safety", SKILL_EXPERIENCED),
+		new /datum/wire_description(STASISCAGE_WIRE_RELEASE, "This wire is connected to the automated lid latches.", "Release", SKILL_TRAINED),
+		new /datum/wire_description(STASISCAGE_WIRE_LOCK, "This wire is connected to the lid motors.", "Lock", SKILL_TRAINED)
 	)
 
 

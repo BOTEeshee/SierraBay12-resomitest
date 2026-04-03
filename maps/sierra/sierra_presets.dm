@@ -5,10 +5,11 @@ var/global/const/NETWORK_FIRST_DECK  = "First Deck"
 var/global/const/NETWORK_SECOND_DECK = "Second Deck"
 var/global/const/NETWORK_THIRD_DECK  = "Third Deck"
 var/global/const/NETWORK_FOURTH_DECK = "Fourth Deck"
-var/global/const/NETWORK_BRIDGE_DECK = "Bridge Deck"
+// var/global/const/NETWORK_BRIDGE_DECK = "Bridge Deck"
 var/global/const/NETWORK_SUPPLY      = "Supply"
 var/global/const/NETWORK_HANGAR      = "Hangar"
 var/global/const/NETWORK_PETROV      = "Petrov"
+var/global/const/NETWORK_PHAETHON    = "Phaethon"
 
 //Overrides
 var/global/const/NETWORK_COMMAND = "Command"
@@ -28,6 +29,8 @@ var/global/const/NETWORK_ENGINEERING_OUTPOST = "Engineering Outpost"
 			return access_hangar
 		if(NETWORK_PETROV)
 			return access_petrov
+		if(NETWORK_PHAETHON)
+			return access_sec_doors
 		if(NETWORK_EXPEDITION)
 			return access_expedition_shuttle
 	return get_shared_network_access(network) || ..()
@@ -39,7 +42,7 @@ var/global/const/NETWORK_ENGINEERING_OUTPOST = "Engineering Outpost"
 		NETWORK_SECOND_DECK,
 		NETWORK_THIRD_DECK,
 		NETWORK_FOURTH_DECK,
-		NETWORK_BRIDGE_DECK,
+		// NETWORK_BRIDGE_DECK,
 		NETWORK_COMMAND,
 		NETWORK_ENGINEERING,
 		NETWORK_ENGINE,
@@ -52,7 +55,9 @@ var/global/const/NETWORK_ENGINEERING_OUTPOST = "Engineering Outpost"
 		NETWORK_HANGAR,
 		NETWORK_CALYPSO,
 		NETWORK_PETROV,
+		NETWORK_PHAETHON,
 		NETWORK_POD,
+		NETWORK_HELMETS,
 		NETWORK_ALARM_ATMOS,
 		NETWORK_ALARM_CAMERA,
 		NETWORK_ALARM_FIRE,
@@ -104,14 +109,19 @@ var/global/const/NETWORK_ENGINEERING_OUTPOST = "Engineering Outpost"
 /obj/machinery/camera/network/fourth_deck
 	network = list(NETWORK_FOURTH_DECK)
 
+/*
 /obj/machinery/camera/network/bridge_deck
 	network = list(NETWORK_BRIDGE_DECK)
+*/
 
 /obj/machinery/camera/network/pod
 	network = list(NETWORK_POD)
 
 /obj/machinery/camera/network/petrov
 	network = list(NETWORK_PETROV)
+
+/obj/machinery/camera/network/phaethon
+	network = list(NETWORK_PHAETHON)
 
 /obj/machinery/camera/network/supply
 	network = list(NETWORK_SUPPLY)
@@ -134,6 +144,19 @@ var/global/const/NETWORK_ENGINEERING_OUTPOST = "Engineering Outpost"
 // Motion
 /obj/machinery/camera/motion/engineering_outpost
 	network = list(NETWORK_ENGINEERING_OUTPOST)
+
+/obj/machinery/camera/motion/command
+	network = list(NETWORK_COMMAND)
+
+// AI Core
+
+/obj/machinery/camera/ai/Initialize()
+	. = ..()
+	upgradeEmpProof()
+	upgradeMotion()
+
+/obj/machinery/camera/ai/core
+	network = list(NETWORK_COMMAND)
 
 // All Upgrades
 /obj/machinery/camera/all/command

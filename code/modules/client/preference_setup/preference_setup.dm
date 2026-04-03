@@ -1,6 +1,8 @@
 #define TOPIC_UPDATE_PREVIEW 4
 #define TOPIC_HARD_REFRESH   8 // use to force a browse() call, unblocking some rsc operations
-#define TOPIC_REFRESH_UPDATE_PREVIEW (TOPIC_HARD_REFRESH|TOPIC_UPDATE_PREVIEW)
+
+#define TOPIC_REFRESH_UPDATE_PREVIEW (TOPIC_REFRESH|TOPIC_UPDATE_PREVIEW) // [SIERRA-EDIT] #define TOPIC_REFRESH_UPDATE_PREVIEW (TOPIC_HARD_REFRESH|TOPIC_UPDATE_PREVIEW)
+
 
 var/global/const/CHARACTER_PREFERENCE_INPUT_TITLE = "Character Preference"
 
@@ -29,6 +31,13 @@ var/global/const/CHARACTER_PREFERENCE_INPUT_TITLE = "Character Preference"
 	name = "Roles"
 	sort_order = 4
 	category_item_type = /datum/category_item/player_setup_item/antagonism
+
+// [SIERRA-ADD] — Cybernetics category: prosthetics + gear augments
+/datum/category_group/player_setup_category/cybernetics_preferences
+	name = "Cybernetics"
+	sort_order = 5
+	category_item_type = /datum/category_item/player_setup_item/cyberware
+// [/SIERRA-ADD]
 
 /datum/category_group/player_setup_category/loadout_preferences
 	name = "Loadout"
@@ -80,6 +89,10 @@ var/global/const/CHARACTER_PREFERENCE_INPUT_TITLE = "Character Preference"
 	for(var/datum/category_group/player_setup_category/PS in categories)
 		PS.load_preferences(R)
 
+/datum/category_collection/player_setup_collection/proc/load_slot(datum/pref_record_reader/R, datum/preferences_slot/slot)
+	for(var/datum/category_group/player_setup_category/PS in categories)
+		PS.load_slot(R, slot)
+
 /datum/category_collection/player_setup_collection/proc/save_preferences(datum/pref_record_writer/W)
 	for(var/datum/category_group/player_setup_category/PS in categories)
 		PS.save_preferences(W)
@@ -90,7 +103,7 @@ var/global/const/CHARACTER_PREFERENCE_INPUT_TITLE = "Character Preference"
 		if(PS == selected_category)
 			dat += "[PS.name] "	// TODO: Check how to properly mark a href/button selected in a classic browser window
 		else
-			dat += "<a href='?src=\ref[src];category=\ref[PS]'>[PS.name]</a> "
+			dat += "<a href='byond://?src=\ref[src];category=\ref[PS]'>[PS.name]</a> "
 	return dat
 
 /datum/category_collection/player_setup_collection/proc/content(mob/user)
@@ -150,6 +163,10 @@ var/global/const/CHARACTER_PREFERENCE_INPUT_TITLE = "Character Preference"
 	for(var/datum/category_item/player_setup_item/player_setup_item in items)
 		player_setup_item.save_preferences(S)
 
+/datum/category_group/player_setup_category/proc/load_slot(savefile/S, datum/preferences_slot/slot)
+	for(var/datum/category_item/player_setup_item/player_setup_item in items)
+		player_setup_item.load_slot(S, slot)
+
 /datum/category_group/player_setup_category/proc/content(mob/user)
 	. = "<table style='width:100%'><tr style='vertical-align:top'><td style='width:50%'>"
 	var/current = 0
@@ -203,6 +220,12 @@ var/global/const/CHARACTER_PREFERENCE_INPUT_TITLE = "Character Preference"
 	return
 
 /*
+* Called when the item is asked to load character settings onto a reserve slot
+*/
+/datum/category_item/player_setup_item/proc/load_slot(datum/pref_record_reader/R, datum/preferences_slot/slot)
+	return
+
+/*
 * Called when the item is asked to save user/global settings
 */
 /datum/category_item/player_setup_item/proc/save_preferences(datum/pref_record_writer/W)
@@ -240,6 +263,9 @@ var/global/const/CHARACTER_PREFERENCE_INPUT_TITLE = "Character Preference"
 		pref_mob.client.prefs.open_setup_window(usr)
 	else if (. & TOPIC_REFRESH)
 		pref_mob.client.prefs.update_setup_window(usr)
+	// [SIERRA-ADD] HEIGHT — eagerly update MAP preview from any tab (after window refresh to avoid blocking UI)
+	if ((. & TOPIC_UPDATE_PREVIEW) && pref_mob.client?.prefs && !pref_mob.client.prefs.preview_icon)
+		pref_mob.client.prefs.update_preview_icon()
 
 /datum/category_item/player_setup_item/CanUseTopic(mob/user)
 	return 1
@@ -258,4 +284,4 @@ var/global/const/CHARACTER_PREFERENCE_INPUT_TITLE = "Character Preference"
 		return pref.client.mob
 
 /datum/category_item/player_setup_item/proc/preference_species()
-	return all_species[pref.species] || all_species[SPECIES_HUMAN]
+	return GLOB.species_by_name[pref.species] || GLOB.species_by_name[SPECIES_HUMAN]

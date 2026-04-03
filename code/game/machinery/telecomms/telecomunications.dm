@@ -38,6 +38,7 @@ var/global/list/obj/machinery/telecomms/telecomms_list = list()
 	var/listening_levels = null	// null = auto set in Initialize() - these are the z levels that the machine is listening to.
 	var/overloaded_for = 0
 	var/outage_probability = 75			// Probability of failing during a ionospheric storm
+	var/datum/sound_token/sound_token
 
 
 /obj/machinery/telecomms/proc/relay_information(datum/signal/signal, filter, copysig, amount = 20)
@@ -146,6 +147,7 @@ var/global/list/obj/machinery/telecomms/telecomms_list = list()
 	for(var/obj/machinery/telecomms/comm in telecomms_list)
 		comm.links -= src
 	links = list()
+	QDEL_NULL(sound_token)
 	..()
 
 // Used in auto linking
@@ -178,6 +180,11 @@ var/global/list/obj/machinery/telecomms/telecomms_list = list()
 	listening_levels = GetConnectedZlevels(z)
 	update_power()
 
+/obj/machinery/telecomms/power_change()
+	. = ..()
+	if (!sound_token && !GET_FLAGS(stat, MACHINE_STAT_NOPOWER))
+		sound_token = GLOB.sound_player.PlayLoopingSound(src, "\ref[src]", "sound/ambience/ambiservers.ogg", 4, 5, 1)
+
 /obj/machinery/telecomms/proc/update_power()
 	if(toggled)
 		if(inoperable() || GET_FLAGS(stat, MACHINE_STAT_EMPED) || integrity <= 0) // if powered, on. if not powered, off. if too damaged, off
@@ -202,6 +209,9 @@ var/global/list/obj/machinery/telecomms/telecomms_list = list()
 
 	if(traffic > 0)
 		traffic -= netspeed
+
+	if(sound_token && GET_FLAGS(stat, MACHINE_STAT_NOPOWER))
+		QDEL_NULL(sound_token)
 
 /obj/machinery/telecomms/emp_act(severity)
 	if(prob(100/severity))
@@ -503,6 +513,7 @@ var/global/list/obj/machinery/telecomms/telecomms_list = list()
 
 				var/datum/comm_log_entry/log = new
 				var/mob/M = signal.data["mob"]
+				log.timestamp = "[stationdate2text()], [time_stamp()]"
 
 				// Copy the signal.data entries we want
 				log.parameters["mobtype"] = signal.data["mobtype"]
@@ -580,6 +591,7 @@ var/global/list/obj/machinery/telecomms/telecomms_list = list()
 	log.input_type = input
 	log.parameters["message"] = content
 	log_entries.Add(log)
+	log.timestamp = "[stationdate2text()], [time_stamp()]"
 	update_logs()
 
 /obj/machinery/telecomms/server/proc/get_channel_info(freq)
@@ -596,3 +608,4 @@ var/global/list/obj/machinery/telecomms/telecomms_list = list()
 	var/name = "data packet (#)"
 	var/garbage_collector = 1 // if set to 0, will not be garbage collected
 	var/input_type = "Speech File"
+	var/timestamp

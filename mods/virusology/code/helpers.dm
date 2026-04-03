@@ -22,7 +22,7 @@
 	if(istype(H) && H.species.get_virus_immune(H))
 		return 0
 
-	var/protection = M.get_blocked_ratio(null, DAMAGE_BIO, damage_flags = DAMAGE_FLAG_DISPERSED | DAMAGE_FLAG_BIO)	//gets the full body bio armour value, weighted by body part coverage.
+	var/protection = M.get_blocked_ratio(null, DAMAGE_TOXIN, damage_flags = DAMAGE_FLAG_DISPERSED | DAMAGE_FLAG_BIO)	//gets the full body bio armour value, weighted by body part coverage.
 	var/score = round(6 * protection) 			//scales 100% protection to 6.
 
 	switch(vector)
@@ -65,14 +65,19 @@
 	if (!istype(M))
 		return 0
 
-	var/protection = M.get_blocked_ratio(null, DAMAGE_BIO, damage_flags = DAMAGE_FLAG_BIO | DAMAGE_FLAG_DISPERSED)	//gets the full body bio armour value, weighted by body part coverage.
+	var/protection = M.get_blocked_ratio(null, DAMAGE_TOXIN, damage_flags = DAMAGE_FLAG_BIO | DAMAGE_FLAG_DISPERSED)	//gets the full body bio armour value, weighted by body part coverage.
 
 	if (vector == "Airborne")	//for airborne infections face-covering items give non-weighted protection value.
 		if(M.internal)
-			return 1
-		protection = max(protection, M.get_blocked_ratio(BP_HEAD, DAMAGE_BIO, damage_flags = DAMAGE_FLAG_BIO))
+			return 0
+		protection = max(protection, M.get_blocked_ratio(BP_HEAD, DAMAGE_TOXIN, damage_flags = DAMAGE_FLAG_BIO))
 
-	return prob(100 * protection + 15*M.chem_effects[CE_ANTIVIRAL])
+	var/spreading_chance = 100 - (100 * protection + 15*M.chem_effects[CE_ANTIVIRAL])
+
+	if(spreading_chance > 0)
+		return prob(spreading_chance)
+	else
+		return 0
 
 /proc/airborne_can_reach(turf/simulated/source, turf/simulated/target)
 	//Can't ariborne without air
@@ -100,7 +105,7 @@
 	var/list/antibodies_in_common = M.antibodies & disease.antigen
 	if(LAZYLEN(antibodies_in_common))
 		return
-	if(prob(100 * M.reagents.get_reagent_amount(/datum/reagent/spaceacillin) / (REAGENTS_OVERDOSE/2)))
+	if(M.reagents && prob(100 * M.reagents.get_reagent_amount(/datum/reagent/spaceacillin) / (REAGENTS_OVERDOSE/2)))
 		return
 
 	if(!LAZYLEN(disease.affected_species))
@@ -126,14 +131,14 @@
 	var/datum/disease2/disease/D = new /datum/disease2/disease
 
 	D.makerandom(VIRUS_MILD)
-	infect_virus2(M, D, 1)
+	infect_virus2(M, D)
 
 //Infects mob M with random greated disease, if he doesn't have one
 /proc/infect_mob_random_greater(mob/living/carbon/M)
 	var/datum/disease2/disease/D = new /datum/disease2/disease
 
 	D.makerandom(VIRUS_COMMON)
-	infect_virus2(M, D, 1)
+	infect_virus2(M, D)
 
 //Fancy prob() function.
 /proc/dprob(p)

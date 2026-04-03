@@ -22,8 +22,8 @@ var/global/list/wireColours = list("red", "blue", "green", "darkred", "orange", 
 
 	var/table_options = " align='center'"
 	var/row_options1 = " width='80px'"
-	var/row_options2 = " width='320px'"
-	var/window_x = 450
+	var/row_options2 = " width='370px'"
+	var/window_x = 500
 	var/window_y = 470
 
 	var/list/descriptions // Descriptions of wires (datum/wire_description) for use with examining.
@@ -98,8 +98,11 @@ var/global/list/wireColours = list("red", "blue", "green", "darkred", "orange", 
 		close_browser(user, "window=wires")
 		return
 
+	// [SIERRA-ADD] - SCROLL-PRESERVE — save and restore scroll position across browse() reloads
+	var/scroll_script = {"<script>window.onscroll=function(){window.name=String(document.documentElement.scrollTop||document.body.scrollTop)};window.onload=function(){var p=parseInt(window.name);if(p>0)setTimeout(function(){document.documentElement.scrollTop=document.body.scrollTop=p},0)};</script>"}
+	// [/SIERRA-ADD]
 	var/datum/browser/popup = new(user, "wires", holder.name, window_x, window_y)
-	popup.set_content(html)
+	popup.set_content("[scroll_script][html]") // [SIERRA-EDIT] popup.set_content(html)
 	popup.set_title_image(user.browse_rsc_icon(holder.icon, holder.icon_state))
 	popup.open()
 	return TRUE
@@ -116,14 +119,25 @@ var/global/list/wireColours = list("red", "blue", "green", "darkred", "orange", 
 	if(!user.skill_check(SKILL_ELECTRICAL, SKILL_BASIC))
 		wires_used = shuffle(wires_used)
 
+	var/show_labels = FALSE
+	if (user.skill_check(SKILL_ELECTRICAL, SKILL_MASTER))
+		show_labels = TRUE
+
 	for(var/colour in wires_used)
 		html += "<tr>"
 		html += "<td[row_options1]>[SPAN_COLOR(colour, "&#9724;")][capitalize(colour)]</td>"
 		html += "<td[row_options2]>"
-		html += "<A href='?src=\ref[src];action=1;cut=[colour]'>[IsColourCut(colour) ? "Mend" :  "Cut"]</A>"
-		html += " <A href='?src=\ref[src];action=1;pulse=[colour]'>Pulse</A>"
-		html += " <A href='?src=\ref[src];action=1;attach=[colour]'>[IsAttached(colour) ? "Detach" : "Attach"] Signaller</A>"
-		html += " <A href='?src=\ref[src];action=1;examine=[colour]'>Examine</A></td></tr>"
+		html += "<a href='byond://?src=\ref[src];action=1;cut=[colour]'>[IsColourCut(colour) ? "Mend" :  "Cut"]</A>"
+		html += " <a href='byond://?src=\ref[src];action=1;pulse=[colour]'>Pulse</A>"
+		html += " <a href='byond://?src=\ref[src];action=1;attach=[colour]'>[IsAttached(colour) ? "Detach" : "Attach"] Signaller</A>"
+		var/label = "Examine"
+		if (show_labels)
+			var/datum/wire_description/wire_description = get_description(GetIndex(colour))
+			if (wire_description && wire_description.skill_level <= SKILL_MASTER)
+				label = "[label] ([wire_description.label])"
+			else
+				label = "[label] (???)"
+		html += " <a href='byond://?src=\ref[src];action=1;examine=[colour]'>[label]</A></td></tr>"
 	html += "</table>"
 	html += "</div>"
 

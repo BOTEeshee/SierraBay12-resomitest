@@ -1,5 +1,5 @@
 
-GLOBAL_LIST_INIT(proteinbar_flavors, list(
+GLOBAL_LIST_AS(proteinbar_flavors, list(
 	"apple 'n pear" = list(
 		/datum/reagent/drink/juice/apple,
 		/datum/reagent/drink/juice/pear
@@ -39,7 +39,8 @@ GLOBAL_LIST_INIT(proteinbar_flavors, list(
 	),
 	"mixed berry" = /datum/reagent/drink/juice/berry,
 	"peanut crunch" = list(
-		/datum/reagent/nutriment/peanutbutter,
-		/datum/reagent/nutriment/groundpeanuts
+		/datum/reagent/nutriment/peanut,
+		/datum/reagent/nutriment/peanut/peanutbutter,
+		/datum/reagent/nutriment/peanut/groundpeanuts
 	)
 ))
